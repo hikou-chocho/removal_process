@@ -53,102 +53,110 @@ async def log_requests(request: Request, call_next):
 
 @app.post("/pipeline/run", response_model=PipelineResponse)
 def run_pipeline(req: PipelineRequest):
-    # Log top-level request summary (avoid huge dumps)
-    try:
-        logger.info("PIPELINE start: units=%s origin=%s ops=%d out=%s",
-                    getattr(req, "units", None), getattr(req, "origin", None),
-                    len(req.operations or []), getattr(req, "output_mode", None))
-    except Exception:
-        pass
+    # Top-level summary
+    logger.info(
+        ">>> POST /pipeline/run units=%s origin=%s ops=%d out=%s",
+        req.units,
+        req.origin,
+        len(req.operations),
+        req.output_mode,
+    )
 
-    # --- Build stock ---
+    # --- Stock build ---
     try:
         work = build_stock(req.stock)
-        logger.info("STOCK built: type=%s params=%s", req.stock.type, req.stock.params)
-    except Exception as ex:
-        logger.exception("build_stock failed")
+    except OpError as e:
+        logger.exception("STOCK build input error")
         raise HTTPException(status_code=400, detail={
-            "phase": "stock",
-            "message": str(ex),
-        }) from ex
+            "status": "error",
+            "message": str(e),
+            "step": 0,
+            "op": "stock",
+        })
+    except Exception as e:
+        logger.exception("STOCK build internal error")
+        raise HTTPException(status_code=500, detail={
+            "status": "error",
+            "message": f"stock build internal error: {e}",
+            "step": 0,
+            "op": "stock",
+        })
 
-    steps: list[StepResult] = []
-    step_no = 0
+    before = work
+    steps_result: list[StepResult] = []
 
-    # --- Apply operations ---
-    for op in req.operations:
-        step_no += 1
-        name = op.name or op.op.replace(":", "_")
-        logger.info("STEP %02d START op=%s name=%s selector=%s params=%s",
-                    step_no, op.op, name, op.selector, op.params)
+    # export dir
+    output_dir = OUTDIR
+
+    do_export = req.output_mode == "stl" and not req.dry_run
+
+    for idx, op in enumerate(req.operations, start=1):
+        logger.info(
+            "STEP %02d START op=%s name=%s selector=%s params=%s",
+            idx,
+            op.op,
+            op.name,
+            op.selector,
+            op.params,
+        )
 
         try:
-            after, removed = apply_op(work, op)
-            logger.info("STEP %02d OK op=%s", step_no, op.op)
-        except OpError as ex:
-            logger.exception("STEP %02d FAILED (OpError) op=%s", step_no, op.op)
+            after, removed = apply_op(before, op)
+        except OpError as e:
+            logger.exception("STEP %02d input error", idx)
             raise HTTPException(status_code=400, detail={
-                "phase": "op",
-                "step": step_no,
+                "status": "error",
+                "message": str(e),
+                "step": idx,
                 "op": op.op,
-                "selector": op.selector,
-                "params": op.params,
-                "message": str(ex),
-            }) from ex
-        except Exception as ex:
-            logger.exception("STEP %02d FAILED (Unexpected) op=%s", step_no, op.op)
+                "name": op.name,
+            })
+        except Exception as e:
+            logger.exception("STEP %02d internal error", idx)
             raise HTTPException(status_code=500, detail={
-                "phase": "op",
-                "step": step_no,
+                "status": "error",
+                "message": f"internal error: {e}",
+                "step": idx,
                 "op": op.op,
-                "selector": op.selector,
-                "params": op.params,
-                "message": str(ex),
-            }) from ex
+                "name": op.name,
+            })
+
+        logger.info("STEP %02d OK op=%s", idx, op.op)
 
         solid_path = None
         removed_path = None
 
-        # --- Export (optional) ---
-        if req.output_mode == "stl" and not req.dry_run:
-            try:
-                solid_name = req.file_template_solid.format(step=step_no, name=name)
-                removed_name = req.file_template_removed.format(step=step_no, name=name)
-                solid_path = OUTDIR / solid_name
-                removed_path = OUTDIR / removed_name
+        if do_export:
+            solid_name = req.file_template_solid.format(
+                step=idx, name=op.name or op.op.replace(":", "_")
+            )
+            removed_name = req.file_template_removed.format(
+                step=idx, name=op.name or op.op.replace(":", "_")
+            )
 
-                _export_stl(after, solid_path)
-                if removed is not None:
-                    _export_stl(removed, removed_path)
+            solid_path = output_dir / solid_name
+            removed_path = output_dir / removed_name
 
-                logger.info("STEP %02d EXPORTED: solid=%s removed=%s",
-                            step_no, solid_path, removed_path)
-            except Exception as ex:
-                logger.exception("STEP %02d EXPORT failed", step_no)
-                raise HTTPException(status_code=400, detail={
-                    "phase": "export",
-                    "step": step_no,
-                    "op": op.op,
-                    "message": str(ex),
-                }) from ex
+            cq.exporters.export(after, str(solid_path))
+            if removed is not None:
+                cq.exporters.export(removed, str(removed_path))
 
-        steps.append(StepResult(
-            step=step_no,
-            name=name,
-            solid=str(solid_path).replace("\\","/") if solid_path else None,
-            removed=str(removed_path).replace("\\","/") if removed_path else None
-        ))
+            logger.info(
+                "STEP %02d EXPORTED: solid=%s removed=%s",
+                idx,
+                solid_path,
+                removed_path,
+            )
 
-        # Next step
-        work = after
+        steps_result.append(
+            StepResult(
+                step=idx,
+                name=op.name or op.op,
+                solid=str(solid_path).replace("\\", "/") if solid_path else None,
+                removed=str(removed_path).replace("\\", "/") if removed_path else None,
+            )
+        )
 
-    # Optional show mode (best-effort)
-    if req.output_mode == "show" and not req.dry_run:
-        try:
-            from cadquery import show_object
-            show_object(work)
-        except Exception:
-            logger.info("show_object skipped (headless or unavailable)")
+        before = after
 
-    logger.info("PIPELINE done: steps=%d", len(steps))
-    return PipelineResponse(status="ok", steps=steps)
+    return PipelineResponse(status="ok", steps=steps_result)
