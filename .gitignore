@@ -1,0 +1,19 @@
+# Ignore logs and virtual environments
+/logs/
+/venv/
+
+# Common Python ignores
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.env
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

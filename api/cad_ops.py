@@ -117,52 +117,69 @@ def apply_op(before: cq.Workplane, op: Operation) -> Tuple[cq.Workplane, cq.Work
 
     try:
         if name == "mill:face":
+            # Face mill: cut a large rectangle covering the selected face by depth
             _require_params(params, ["depth"])
             depth = _f(params.get("depth", 1.0), "depth")
+            # locate a single planar face and workplane on it
+            wp = _must_single_planar_face(before, selector)
+
+            # bounding box from before (support different bbox attribute names)
             bb = before.val().BoundingBox()
             try:
-                after = (before
-                         .faces(selector)
-                         .workplane()
-                         .rect(bb.xlen * 1.2, bb.ylen * 1.2, centered=True)
-                         .cutBlind(-depth))
+                width = bb.xlen * 1.1
+                height = bb.ylen * 1.1
+            except Exception:
+                width = (bb.xmax - bb.xmin) * 1.1
+                height = (bb.ymax - bb.ymin) * 1.1
+
+            try:
+                cut_solid = wp.rect(width, height).extrude(-abs(depth))
+                after = before.cut(cut_solid)
             except ValueError as vex:
-                # CadQuery raises ValueError("Cannot find a solid ...")
-                raise OpError(f"mill:face failed at cutBlind: {vex}")
+                raise OpError(f"mill:face failed during cut: {vex}")
             except Exception as ex:
                 raise OpError(f"mill:face failed: {ex}")
 
         elif name == "mill:profile":
+            # rectangular pocket cut on selected face
             _require_params(params, ["rect_w", "rect_h", "depth"])
             rect_w = _f(params.get("rect_w", 10), "rect_w")
             rect_h = _f(params.get("rect_h", 10), "rect_h")
             depth  = _f(params.get("depth", 1.0), "depth")
+
+            if rect_w <= 0 or rect_h <= 0:
+                raise OpError("rect_w, rect_h must be positive")
+            if depth == 0:
+                raise OpError("depth must be non-zero")
+
+            wp = _must_single_planar_face(before, selector)
             try:
-                after = (before
-                         .faces(selector)
-                         .workplane()
-                         .center(0, 0)
-                         .rect(rect_w, rect_h, centered=True)
-                         .cutBlind(-depth))
+                cut_solid = wp.rect(rect_w, rect_h).extrude(-abs(depth))
+                after = before.cut(cut_solid)
             except ValueError as vex:
-                raise OpError(f"mill:profile failed at cutBlind: {vex}")
+                raise OpError(f"mill:profile failed during cut: {vex}")
             except Exception as ex:
                 raise OpError(f"mill:profile failed: {ex}")
 
         elif name == "drill:hole":
+            # simple through/partial hole implemented as a negative cylinder
             _require_params(params, ["dia", "depth"])
             dia   = _f(params.get("dia", 5), "dia")
             depth = _f(params.get("depth", 5), "depth")
             x     = _f(params.get("x", 0), "x")
             y     = _f(params.get("y", 0), "y")
+
+            if dia <= 0:
+                raise OpError("dia must be positive")
+            if depth == 0:
+                raise OpError("depth must be non-zero")
+
+            wp = _must_single_planar_face(before, selector)
             try:
-                after = (before
-                         .faces(selector)
-                         .workplane()
-                         .center(x, y)
-                         .hole(dia, depth))
+                cut_solid = wp.center(x, y).circle(dia / 2.0).extrude(-abs(depth))
+                after = before.cut(cut_solid)
             except ValueError as vex:
-                raise OpError(f"drill:hole failed at hole(): {vex}")
+                raise OpError(f"drill:hole failed during cut: {vex}")
             except Exception as ex:
                 raise OpError(f"drill:hole failed: {ex}")
 
