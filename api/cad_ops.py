@@ -96,6 +96,100 @@ def build_stock(stock: Stock) -> cq.Workplane:
 
     raise ValueError(f"unsupported stock.type={stock.type}")
 
+
+# -----------------------------
+#  Lathe helpers & ops
+# -----------------------------
+
+def _lathe_axis_info(before: cq.Workplane) -> tuple[float, float, float]:
+    """
+    Return (zmin, zmax, radius) estimated from BoundingBox for lathe-style ops.
+    """
+    bb = before.val().BoundingBox()
+    zmin, zmax = bb.zmin, bb.zmax
+    radius = max(abs(bb.xmin), abs(bb.xmax), abs(bb.ymin), abs(bb.ymax))
+    return zmin, zmax, radius
+
+
+def _op_lathe_face_cut(before: cq.Workplane, op: Operation) -> cq.Workplane:
+    depth = _f(op.params.get("depth", 0), "depth")
+    if depth <= 0:
+        raise OpError("lathe:face_cut depth must be positive")
+
+    wp = _must_single_planar_face(before, ">Z")
+
+    _, _, radius = _lathe_axis_info(before)
+    cut_solid = wp.circle(radius * 1.2).extrude(-abs(depth))
+    after = before.cut(cut_solid)
+    return after
+
+
+def _op_lathe_turn_od(before: cq.Workplane, op: Operation) -> cq.Workplane:
+    target_dia = _f(op.params.get("target_dia", 0), "target_dia")
+    length = _f(op.params.get("length", 0), "length")
+
+    if target_dia <= 0:
+        raise OpError("lathe:turn_od target_dia must be positive")
+    if length <= 0:
+        raise OpError("lathe:turn_od length must be positive")
+
+    zmin, zmax, radius = _lathe_axis_info(before)
+    total_len = zmax - zmin
+    if length > total_len:
+        raise OpError(f"lathe:turn_od length={length} exceeds total length {total_len}")
+
+    stock_r = radius
+    target_r = target_dia / 2.0
+    if target_r >= stock_r:
+        raise OpError("lathe:turn_od target_dia must be smaller than current stock diameter")
+
+    z_start = zmax - length
+
+    outer = (
+        cq.Workplane("XY")
+        .workplane(offset=z_start)
+        .circle(stock_r * 1.05)
+        .extrude(length)
+    )
+    inner = (
+        cq.Workplane("XY")
+        .workplane(offset=z_start)
+        .circle(target_r)
+        .extrude(length)
+    )
+    cut_shell = outer.cut(inner)
+    after = before.cut(cut_shell)
+    return after
+
+
+def _op_lathe_bore_id(before: cq.Workplane, op: Operation) -> cq.Workplane:
+    target_dia = _f(op.params.get("target_dia", 0), "target_dia")
+    length = _f(op.params.get("length", 0), "length")
+
+    if target_dia <= 0:
+        raise OpError("lathe:bore_id target_dia must be positive")
+    if length <= 0:
+        raise OpError("lathe:bore_id length must be positive")
+
+    zmin, zmax, radius = _lathe_axis_info(before)
+    total_len = zmax - zmin
+    if length > total_len:
+        raise OpError(f"lathe:bore_id length={length} exceeds total length {total_len}")
+
+    target_r = target_dia / 2.0
+    if target_r >= radius:
+        raise OpError("lathe:bore_id target_dia must be smaller than stock outer diameter")
+
+    z_start = zmax - length
+    cut_solid = (
+        cq.Workplane("XY")
+        .workplane(offset=z_start)
+        .circle(target_r)
+        .extrude(length)
+    )
+    after = before.cut(cut_solid)
+    return after
+
 # =========================
 # operation appliers
 # =========================
@@ -184,33 +278,13 @@ def apply_op(before: cq.Workplane, op: Operation) -> Tuple[cq.Workplane, cq.Work
                 raise OpError(f"drill:hole failed: {ex}")
 
         elif name == "lathe:face_cut":
-            depth = _f(params.get("depth", 1.0), "depth")
-            wp = _must_single_planar_face(before, ">Z")
-            after = wp.cutBlind(-depth)
+            after = _op_lathe_face_cut(before, op)
 
         elif name == "lathe:turn_od":
-            dia = _f(params.get("dia", 40), "dia")
-            bb = before.val().BoundingBox()
-            length = bb.zlen
-            shell = (
-                cq.Workplane("ZX")
-                .circle(dia / 2.0)
-                .extrude(length, both=True)
-                .translate((0, 0, bb.zmin + length / 2.0))
-            )
-            after = before.intersect(shell)
+            after = _op_lathe_turn_od(before, op)
 
         elif name == "lathe:bore_id":
-            dia = _f(params.get("dia", 20), "dia")
-            bb = before.val().BoundingBox()
-            length = bb.zlen
-            core = (
-                cq.Workplane("ZX")
-                .circle(dia / 2.0)
-                .extrude(length, both=True)
-                .translate((0, 0, bb.zmin + length / 2.0))
-            )
-            after = before.cut(core)
+            after = _op_lathe_bore_id(before, op)
 
         elif name == "xform:transform":
             dx = _f(params.get("dx", 0), "dx")
