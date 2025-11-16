@@ -1,7 +1,7 @@
 # api/models.py
 from __future__ import annotations
 from pydantic import BaseModel, Field
-from typing import Literal, Optional, Dict, List, Union
+from typing import Literal, Optional, Dict, List, Union, Any
 
 Num = Union[float, int]
 
@@ -11,7 +11,7 @@ class Operation(BaseModel):
     selector: Optional[str] = None                # CadQuery selector (e.g. ">Z", "<X", "|Y")
     workplane: Optional[Literal["XY", "YZ", "ZX"]] = None
     csys: Optional[Dict[str, List[float]]] = None # 予約（STEP2で回転・平行移動対応）
-    params: Dict[str, Num | str] = Field(default_factory=dict)
+    params: Dict[str, Any] = Field(default_factory=dict)
 
 class Stock(BaseModel):
     type: Literal["block", "cylinder", "mesh"]

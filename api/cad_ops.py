@@ -1,6 +1,6 @@
 # api/cad_ops.py (hardened)
 from __future__ import annotations
-from typing import Tuple, Dict, Any, Iterable, Optional
+from typing import Tuple, Dict, Any, List, Iterable, Optional
 import math
 import cadquery as cq
 from .models import Operation, Stock
@@ -11,6 +11,10 @@ from .models import Operation, Stock
 
 class OpError(RuntimeError):
     """User-facing operation error (invalid selector/params, etc.)"""
+
+
+class CadOpError(Exception):
+    """CAD operation error (alias for backward compatibility)"""
 
 def _require_params(p: Dict[str, Any], keys: Iterable[str]) -> None:
     for k in keys:
@@ -78,14 +82,14 @@ def build_stock(stock: Stock) -> cq.Workplane:
         w = _f(p.get("w", 50), "w")
         d = _f(p.get("d", p.get("l", 50)), "d")  # depth/length
         h = _f(p.get("h", 20), "h")
-        # centered in X/Y; rise in +Z by half-height to keep top at +h/2
-        return cq.Workplane("XY").box(w, d, h, centered=True)
+        # centered in X/Y; extrude in +Z direction
+        return cq.Workplane("XY").box(w, d, h, centered=(True, True, False))
 
     if stock.type == "cylinder":
         _require_params(p, ["dia", "h"])
         dia = _f(p.get("dia", p.get("d", 50)), "dia")
         h   = _f(p.get("h", 50), "h")
-        return cq.Workplane("XY").circle(dia / 2.0).extrude(h, both=True)
+        return cq.Workplane("XY").circle(dia / 2.0).extrude(h)
 
     if stock.type == "mesh":
         # STEP1: import is optional; keep placeholder as block for now
@@ -101,14 +105,138 @@ def build_stock(stock: Stock) -> cq.Workplane:
 #  Lathe helpers & ops
 # -----------------------------
 
-def _lathe_axis_info(before: cq.Workplane) -> tuple[float, float, float]:
+def _lathe_axis_info(before: cq.Workplane) -> Tuple[float, float, float]:
     """
-    Return (zmin, zmax, radius) estimated from BoundingBox for lathe-style ops.
+    旋盤系 op 用の補助情報:
+      - zmin, zmax : Z方向の範囲
+      - radius     : おおよその外径半径（BoundingBox から推定）
     """
     bb = before.val().BoundingBox()
     zmin, zmax = bb.zmin, bb.zmax
     radius = max(abs(bb.xmin), abs(bb.xmax), abs(bb.ymin), abs(bb.ymax))
     return zmin, zmax, radius
+
+
+def _parse_profile_points(op: Operation) -> List[Tuple[float, float]]:
+    """
+    params.profile から (z_profile, r) のリストを取り出す。
+    - z_profile: 心押し側端面からの距離
+    - r: 半径 (d/2)
+
+    - z は昇順限定ではない（戻りプロファイルもOK）
+    - (z,d) が完全に同じ点が連続するのだけ禁止
+    """
+    prof = op.params.get("profile")
+    if not isinstance(prof, list) or len(prof) < 2:
+        raise OpError(f"{op.op}: params.profile は 2 点以上の配列で指定してください。")
+
+    result: List[Tuple[float, float]] = []
+    prev_z = None
+    prev_d = None
+
+    for i, p in enumerate(prof):
+        if not isinstance(p, dict):
+            raise OpError(f"{op.op}: profile[{i}] は {{'z':..,'d':..}} 形式で指定してください。")
+
+        try:
+            z = float(p["z"])
+            d = float(p["d"])
+        except KeyError as ex:
+            raise OpError(f"{op.op}: profile[{i}] に必須キー {ex} がありません。")
+        except Exception as ex:
+            raise OpError(f"{op.op}: profile[{i}] の z/d を float に変換できません: {ex}")
+
+        if d <= 0:
+            raise OpError(f"{op.op}: profile[{i}].d は正の直径を指定してください。")
+
+        # 同一点連続だけ禁止（同じ z で d が変わる＝垂直壁は OK）
+        if prev_z is not None and prev_d is not None:
+            if z == prev_z and d == prev_d:
+                raise OpError(
+                    f"{op.op}: profile[{i-1}] と profile[{i}] が同一座標です (z={z}, d={d})。"
+                )
+
+        prev_z, prev_d = z, d
+        r = d / 2.0
+        result.append((z, r))
+
+    return result
+
+
+def _profile_to_world(
+    before: cq.Workplane, profile_zr: List[Tuple[float, float]]
+) -> Tuple[List[Tuple[float, float]], float, float, float]:
+    """
+    (z_profile, r) → (z_world, r) に変換。
+    心押し側端面 = zmin とみなして:
+      z_world = zmin + z_profile
+    """
+    zmin, zmax, stock_r = _lathe_axis_info(before)
+
+    mapped: List[Tuple[float, float]] = []
+    for (z_profile, r) in profile_zr:
+        z_world = zmin + z_profile
+        mapped.append((z_world, r))
+
+    return mapped, zmin, zmax, stock_r
+
+
+def _dedupe_points(points: List[cq.Vector]) -> List[cq.Vector]:
+    """
+    連続する同一座標の点を削除（0長さエッジを避ける）
+    """
+    if not points:
+        return points
+
+    deduped = [points[0]]
+    for p in points[1:]:
+        last = deduped[-1]
+        if (abs(p.x - last.x) > 1e-9) or (abs(p.y - last.y) > 1e-9) or (abs(p.z - last.z) > 1e-9):
+            deduped.append(p)
+    return deduped
+
+
+def _make_profile_solid(
+    before: cq.Workplane,
+    op: Operation,
+) -> cq.Solid:
+    """
+    params.profile から、Z軸まわりの回転体ソリッドを生成する。
+    - XZ 平面上で、
+        (r, z_world) の polyline + 軸(r=0) で 2D ループを作り、
+      それを Z 軸まわりに 360° 回転。
+    """
+    profile_zr = _parse_profile_points(op)
+    mapped, zmin, zmax, stock_r = _profile_to_world(before, profile_zr)
+
+    z_vals = [zw for (zw, _) in mapped]
+
+    # XZ 平面上に 2D ループを作る
+    #   - outer: プロファイル r(z)
+    #   - inner: 軸 r=0 側で閉じる
+    outer_pts = [cq.Vector(r, z, 0.0) for (z, r) in mapped]
+    inner_pts = [cq.Vector(0.0, z, 0.0) for z in reversed(z_vals)]
+
+    outer_pts = _dedupe_points(outer_pts)
+    inner_pts = _dedupe_points(inner_pts)
+
+    if len(outer_pts) < 2 or len(inner_pts) < 2:
+        raise OpError(f"{op.op}: 有効なプロファイル点が不足しています。")
+
+    wp = cq.Workplane("XZ")
+    wire = (
+        wp.polyline(outer_pts)
+          .polyline(inner_pts)
+          .close()
+    )
+
+    # ★ここを修正：XZ ワークプレーン上で Z 軸まわりに回転させる
+    #   axisStart/axisEnd は Workplane ローカル座標で指定するので
+    #   「(0,0,0) → (0,1,0)」が world Z 軸に対応する
+    profile_wp = wire.revolve(360.0, (0, 0, 0), (0, 1, 0))
+    profile_solid = profile_wp.val()
+
+    return profile_solid
 
 
 def _op_lathe_face_cut(before: cq.Workplane, op: Operation) -> cq.Workplane:
@@ -188,6 +316,62 @@ def _op_lathe_bore_id(before: cq.Workplane, op: Operation) -> cq.Workplane:
         .extrude(length)
     )
     after = before.cut(cut_solid)
+    return after
+
+
+def _op_lathe_turn_od_profile(before: cq.Workplane, op: Operation) -> cq.Workplane:
+    """
+    外径プロファイル加工 (Phase1: polyline ベース)
+
+    params.profile: [
+      { "z": <float>, "d": <float> },
+      ...
+    ]
+    - z: 心押し側端面からの距離
+    - d: 仕上がり直径
+    """
+    profile_zr = _parse_profile_points(op)
+    mapped, zmin, zmax, stock_r = _profile_to_world(before, profile_zr)
+
+    # ストック外に出ていないかチェック
+    for i, (z_world, r) in enumerate(mapped):
+        if r > stock_r + 1e-6:
+            raise OpError(
+                f"{op.op}: profile[{i}] の半径 r={r} が現在の外径 {stock_r} を超えています。"
+            )
+
+    profile_solid = _make_profile_solid(before, op)
+
+    # 仕上がり形状 = 現在のワーク ∩ プロファイル回転体
+    after = before.intersect(profile_solid)
+    return after
+
+
+def _op_lathe_bore_id_profile(before: cq.Workplane, op: Operation) -> cq.Workplane:
+    """
+    内径プロファイル加工 (Phase1: polyline ベース)
+
+    params.profile: [
+      { "z": <float>, "d": <float> },
+      ...
+    ]
+    - z: 心押し側端面からの距離
+    - d: 仕上がり直径
+    """
+    profile_zr = _parse_profile_points(op)
+    mapped, zmin, zmax, stock_r = _profile_to_world(before, profile_zr)
+
+    # 外径を超えていないかチェック
+    for i, (z_world, r) in enumerate(mapped):
+        if r >= stock_r - 1e-6:
+            raise OpError(
+                f"{op.op}: profile[{i}] の半径 r={r} が外径 {stock_r} 以上です。"
+            )
+
+    profile_solid = _make_profile_solid(before, op)
+
+    # 内径 = 現在のワークから穴ソリッドをくり抜く
+    after = before.cut(profile_solid)
     return after
 
 # =========================
@@ -285,6 +469,12 @@ def apply_op(before: cq.Workplane, op: Operation) -> Tuple[cq.Workplane, cq.Work
 
         elif name == "lathe:bore_id":
             after = _op_lathe_bore_id(before, op)
+
+        elif name == "lathe:turn_od_profile":
+            after = _op_lathe_turn_od_profile(before, op)
+
+        elif name == "lathe:bore_id_profile":
+            after = _op_lathe_bore_id_profile(before, op)
 
         elif name == "xform:transform":
             dx = _f(params.get("dx", 0), "dx")

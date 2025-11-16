@@ -1,0 +1,32 @@
+{
+  "units": "mm",
+  "origin": "world",
+  "stock": {
+    "type": "cylinder",
+    "params": {
+      "dia": 50.0,
+      "h": 80.0
+    }
+  },
+  "operations": [
+    {
+      "op": "lathe:turn_od_profile",
+      "name": "OdProfile",
+      "selector": null,
+      "params": {
+        "profile": [
+          { "z": 0.0,  "d": 50.0 },
+          { "z": 20.0, "d": 50.0 },
+          { "z": 20.0, "d": 40.0 },
+          { "z": 40.0, "d": 40.0 },
+          { "z": 40.0, "d": 30.0 },
+          { "z": 80.0, "d": 30.0 }
+        ]
+      }
+    }
+  ],
+  "output_mode": "stl",
+  "file_template_solid": "case3_{step:02d}_{name}_solid.stl",
+  "file_template_removed": "case3_{step:02d}_{name}_removed.stl",
+  "dry_run": false
+}
