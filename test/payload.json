@@ -1,0 +1,29 @@
+{
+  "units": "mm",
+  "origin": "world",
+  "stock": { "type": "block", "params": { "w": 50, "h": 30, "d": 20 } },
+  "operations": [
+    {
+      "op": "mill:face",
+      "name": "FaceMill",
+      "selector": ">Z",
+      "params": { "depth": 2 }
+    },
+    {
+      "op": "mill:profile",
+      "name": "EndMillOuter",
+      "selector": ">Z",
+      "params": { "rect_w": 45, "rect_h": 25, "depth": 5 }
+    },
+    {
+      "op": "drill:hole",
+      "name": "Hole",
+      "selector": ">Z",
+      "params": { "dia": 5, "depth": 10, "x": 0, "y": 0 }
+    }
+  ],
+  "output_mode": "stl",
+  "file_template_solid": "payload_{step:02d}_{name}_solid.stl",
+  "file_template_removed": "payload_{step:02d}_{name}_removed.stl",
+  "dry_run": false
+}

@@ -1,25 +1,43 @@
 {
   "units": "mm",
   "origin": "world",
-  "stock": { "type": "block", "params": { "w": 50, "h": 30, "d": 20 } },
+  "stock": {
+    "type": "block",
+    "params": {
+      "w": 50,
+      "h": 30,
+      "d": 20
+    }
+  },
   "operations": [
     {
       "op": "mill:face",
       "name": "FaceMill",
       "selector": ">Z",
-      "params": { "depth": 2 }
+      "params": {
+        "depth": 2
+      }
     },
     {
       "op": "mill:profile",
       "name": "EndMillOuter",
       "selector": ">Z",
-      "params": { "rect_w": 45, "rect_h": 25, "depth": 5 }
+      "params": {
+        "rect_w": 45,
+        "rect_h": 25,
+        "depth": 5
+      }
     },
     {
       "op": "drill:hole",
-      "name": "Hole",
+      "name": "HoleCenter",
       "selector": ">Z",
-      "params": { "dia": 5, "depth": 10, "x": 0, "y": 0 }
+      "params": {
+        "dia": 5,
+        "depth": 10,
+        "x": 0,
+        "y": 0
+      }
     }
   ],
   "output_mode": "stl",

@@ -1,0 +1,43 @@
+{
+  "units": "mm",
+  "origin": "world",
+  "stock": {
+    "type": "cylinder",
+    "params": {
+      "dia": 50,
+      "h": 50
+    }
+  },
+  "operations": [
+    {
+      "op": "lathe:face_cut",
+      "name": "FaceCut",
+      "selector": ">Z",
+      "params": {
+        "depth": 2
+      }
+    },
+    {
+      "op": "lathe:turn_od",
+      "name": "OuterDiameter",
+      "selector": ">Z",
+      "params": {
+        "target_dia": 45,
+        "length": 30
+      }
+    },
+    {
+      "op": "lathe:bore_id",
+      "name": "InnerDiameter",
+      "selector": ">Z",
+      "params": {
+        "target_dia": 20,
+        "length": 30
+      }
+    }
+  ],
+  "output_mode": "stl",
+  "file_template_solid": "case2_{step:02d}_{name}_solid.stl",
+  "file_template_removed": "case2_{step:02d}_{name}_removed.stl",
+  "dry_run": false
+}

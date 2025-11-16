@@ -2,6 +2,12 @@
 /logs/
 /venv/
 
+# Ignore common C# build artifacts inside generated client
+/csharp_client/RemovalProcess/bin/
+/csharp_client/RemovalProcess/obj/
+/csharp_client/RemovalProcess/*.csproj.user/
+/csharp_client/RemovalProcess/.vs/
+
 # Common Python ignores
 __pycache__/
 *.py[cod]
