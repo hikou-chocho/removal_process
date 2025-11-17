@@ -160,3 +160,19 @@ def run_pipeline(req: PipelineRequest):
         before = after
 
     return PipelineResponse(status="ok", steps=steps_result)
+
+
+if __name__ == "__main__":
+    # Allow running directly for local testing / simple container entrypoint.
+    # Azure App Service will typically start the app with an ASGI server
+    # such as `uvicorn api.main:app --host 0.0.0.0 --port $PORT`.
+    try:
+        import uvicorn
+    except Exception:
+        logger.error("uvicorn is not installed; please run via an ASGI server.")
+        raise
+
+    port = int(os.environ.get("PORT", "8000"))
+    host = os.environ.get("HOST", "0.0.0.0")
+    logger.info(f"Starting uvicorn on {host}:{port}")
+    uvicorn.run("api.main:app", host=host, port=port, log_level="info")
