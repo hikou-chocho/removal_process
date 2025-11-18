@@ -88,7 +88,10 @@ def run_pipeline(req: PipelineRequest):
     # export dir
     output_dir = OUTDIR
 
-    do_export = req.output_mode == "stl" and not req.dry_run
+    # allow exporting by format: STL and STEP are supported when the
+    # CadQuery/OCC backend is available — exporters will pick format
+    # from the filename extension (e.g. .stl, .step, .stp).
+    do_export = req.output_mode in ("stl", "step") and not req.dry_run
 
     for idx, op in enumerate(req.operations, start=1):
         logger.info(

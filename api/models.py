@@ -22,7 +22,7 @@ class PipelineRequest(BaseModel):
     origin: Literal["world","center","stock_min"] = "world"
     stock: Stock
     operations: List[Operation]
-    output_mode: Literal["stl","show","none"] = "stl"
+    output_mode: Literal["stl","step","show","none"] = "stl"
     file_template_solid: str = "case_{step:02d}_{name}_solid.stl"
     file_template_removed: str = "case_{step:02d}_{name}_removed.stl"
     dry_run: bool = False

@@ -36,8 +36,8 @@
       }
     }
   ],
-  "output_mode": "stl",
-  "file_template_solid": "case2_{step:02d}_{name}_solid.stl",
-  "file_template_removed": "case2_{step:02d}_{name}_removed.stl",
+  "output_mode": "step",
+  "file_template_solid": "case2_{step:02d}_{name}_solid.step",
+  "file_template_removed": "case2_{step:02d}_{name}_removed.step",
   "dry_run": false
 }
