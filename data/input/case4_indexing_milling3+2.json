@@ -1,0 +1,126 @@
+{
+  "units": "mm",
+  "origin": "world",
+
+  "stock": {
+    "type": "block",
+    "params": {
+      "w": 120.0,
+      "d": 60.0,
+      "h": 40.0
+    }
+  },
+
+  "csys_list": [
+    {
+      "name": "WCS",
+      "role": "world",
+      "origin": { "x": 0.0, "y": 0.0, "z": 0.0 },
+      "rpy_deg": { "r": 0.0, "p": 0.0, "y": 0.0 }
+    },
+    {
+      "name": "CSYS_A0C0_TOP",
+      "parent": "WCS",
+      "origin": { "x": 0.0, "y": 0.0, "z": 0.0 },
+      "rpy_deg": { "r": 0.0, "p": 0.0, "y": 0.0 },
+      "machine_abc_deg": { "a": 0.0, "c": 0.0 }
+    },
+    {
+      "name": "CSYS_A90C0_FRONT",
+      "parent": "WCS",
+      "origin": { "x": 0.0, "y": 0.0, "z": 0.0 },
+      "rpy_deg": { "r": 90.0, "p": 0.0, "y": 0.0 },
+      "machine_abc_deg": { "a": 90.0, "c": 0.0 }
+    },
+    {
+      "name": "CSYS_A90C90_RIGHT",
+      "parent": "WCS",
+      "origin": { "x": 0.0, "y": 0.0, "z": 0.0 },
+      "rpy_deg": { "r": 90.0, "p": 0.0, "y": 90.0 },
+      "machine_abc_deg": { "a": 90.0, "c": 90.0 }
+    }
+  ],
+
+  "operations": [
+    {
+      "op": "setup:index",
+      "name": "Index_A0C0",
+      "csys_ref": "CSYS_A0C0_TOP",
+      "params": {
+        "output_snapshot": true
+      }
+    },
+
+    {
+      "op": "mill:face",
+      "name": "FaceTop",
+      "selector": ">Z",
+      "params": {
+        "depth": 2.0
+      }
+    },
+
+    {
+      "op": "mill:pocket_profile",
+      "name": "TopPocket",
+      "selector": ">Z",
+      "params": {
+        "profile_type": "rect",
+        "center": { "x": 0.0, "y": 0.0 },
+        "size": { "x": 40.0, "y": 30.0 },
+        "depth": 10.0,
+        "corner_radius": 5.0
+      }
+    },
+
+    {
+      "op": "setup:index",
+      "name": "Index_A90C0",
+      "csys_ref": "CSYS_A90C0_FRONT",
+      "params": {
+        "output_snapshot": true
+      }
+    },
+
+    {
+      "op": "mill:pocket_profile",
+      "name": "FrontPocket",
+      "selector": ">Z",
+      "params": {
+        "profile_type": "rect",
+        "center": { "x": 0.0, "y": 0.0 },
+        "size": { "x": 60.0, "y": 20.0 },
+        "depth": 8.0,
+        "corner_radius": 4.0
+      }
+    },
+
+    {
+      "op": "setup:index",
+      "name": "Index_A90C90",
+      "csys_ref": "CSYS_A90C90_RIGHT",
+      "params": {
+        "output_snapshot": true
+      }
+    },
+
+    {
+      "op": "mill:hole_pattern",
+      "name": "SideHoles",
+      "selector": ">Z",
+      "params": {
+        "pattern": "line",
+        "dia": 8.0,
+        "depth": 30.0,
+        "count": 3,
+        "start": { "x": -20.0, "y": 0.0 },
+        "end":   { "x":  20.0, "y": 0.0 }
+      }
+    }
+  ],
+
+  "output_mode": "step",
+  "file_template_solid": "case4_{step:02d}_{name}_solid.step",
+  "file_template_removed": "case4_{step:02d}_{name}_removed.step",
+  "dry_run": false
+}
