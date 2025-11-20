@@ -461,6 +461,97 @@ def apply_op(before: cq.Workplane, op: Operation) -> Tuple[cq.Workplane, cq.Work
             except Exception as ex:
                 raise OpError(f"drill:hole failed: {ex}")
 
+        elif name == "mill:pocket_profile":
+            _require_params(params, ["profile_type", "depth"])
+            profile_type = params.get("profile_type", "rect")
+            if profile_type != "rect":
+                raise OpError("mill:pocket_profile: currently only profile_type='rect' is supported")
+
+            center = params.get("center", {}) or {}
+            size   = params.get("size", {}) or {}
+
+            cx = _f(center.get("x", 0), "center.x")
+            cy = _f(center.get("y", 0), "center.y")
+            sx = _f(size.get("x", 0), "size.x")
+            sy = _f(size.get("y", 0), "size.y")
+            depth = _f(params.get("depth", 0), "depth")
+            corner_radius = _f(params.get("corner_radius", 0), "corner_radius")
+
+            if sx <= 0 or sy <= 0:
+                raise OpError("mill:pocket_profile: size.x, size.y must be positive")
+            if depth == 0:
+                raise OpError("mill:pocket_profile: depth must be non-zero")
+            if corner_radius < 0:
+                raise OpError("mill:pocket_profile: corner_radius must be >= 0")
+
+            # 1) 加工面を 1 枚だけ選んで WP 取得
+            wp = _must_single_planar_face(before, selector)
+
+            try:
+                # 2) まずは角Rなしのベースポケットを作る
+                pocket = (
+                    wp.center(cx, cy)
+                      .rect(sx, sy)
+                      .extrude(-abs(depth))
+                )
+
+                # 3) corner_radius > 0 のときだけ 3D 側でフィレット
+                if corner_radius > 0:
+                    # ポケットの垂直エッジ（Z方向）をフィレット
+                    pocket = pocket.edges("|Z").fillet(corner_radius)
+
+                cut_solid = pocket
+                after = before.cut(cut_solid)
+
+            except ValueError as vex:
+                raise OpError(f"mill:pocket_profile failed during cut: {vex}")
+            except Exception as ex:
+                raise OpError(f"mill:pocket_profile failed: {ex}")
+
+        elif name == "mill:hole_pattern":
+            _require_params(params, ["pattern", "dia", "depth"])
+            pattern = params.get("pattern")
+            dia   = _f(params.get("dia", 5), "dia")
+            depth = _f(params.get("depth", 5), "depth")
+
+            if dia <= 0:
+                raise OpError("mill:hole_pattern: dia must be positive")
+            if depth == 0:
+                raise OpError("mill:hole_pattern: depth must be non-zero")
+
+            if pattern != "line":
+                raise OpError("mill:hole_pattern: currently only pattern='line' is supported")
+
+            _require_params(params, ["count", "start", "end"])
+            count = int(_f(params.get("count", 0), "count"))
+            if count <= 0:
+                raise OpError("mill:hole_pattern: count must be positive")
+
+            start = params.get("start", {}) or {}
+            end   = params.get("end", {}) or {}
+            sx = _f(start.get("x", 0), "start.x")
+            sy = _f(start.get("y", 0), "start.y")
+            ex_ = _f(end.get("x", 0), "end.x")
+            ey = _f(end.get("y", 0), "end.y")
+
+            wp = _must_single_planar_face(before, selector)
+
+            try:
+                cut_solid = None
+                for i in range(count):
+                    t = 0.0 if count == 1 else i / (count - 1)
+                    px = sx + (ex_ - sx) * t
+                    py = sy + (ey - sy) * t
+                    hole = wp.center(px, py).circle(dia / 2.0).extrude(-abs(depth))
+                    cut_solid = hole if cut_solid is None else cut_solid.union(hole)
+
+                after = before.cut(cut_solid)
+
+            except ValueError as vex:
+                raise OpError(f"mill:hole_pattern failed during cut: {vex}")
+            except Exception as ex:
+                raise OpError(f"mill:hole_pattern failed: {ex}")
+
         elif name == "lathe:face_cut":
             after = _op_lathe_face_cut(before, op)
 
@@ -475,6 +566,12 @@ def apply_op(before: cq.Workplane, op: Operation) -> Tuple[cq.Workplane, cq.Work
 
         elif name == "lathe:bore_id_profile":
             after = _op_lathe_bore_id_profile(before, op)
+
+
+        elif name == "setup:index":
+            # Geometry は変えない（beforeそのまま）。
+            # CSYS 切り替えやログ出力は pipeline 側の責務とする。
+            after = before
 
         elif name == "xform:transform":
             dx = _f(params.get("dx", 0), "dx")

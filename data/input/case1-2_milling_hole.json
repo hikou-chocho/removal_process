@@ -28,7 +28,7 @@
   ],
 
   "output_mode": "step",
-  "file_template_solid": "holes_{step:02d}_{name}_solid.step",
-  "file_template_removed": "holes_{step:02d}_{name}_removed.step",
+  "file_template_solid": "case1-2_{step:02d}_{name}_solid.step",
+  "file_template_removed": "case1-2_{step:02d}_{name}_removed.step",
   "dry_run": false
 }

@@ -8,6 +8,8 @@ from fastapi.responses import JSONResponse
 import cadquery as cq
 from .models import PipelineRequest, PipelineResponse, StepResult
 from .cad_ops import build_stock, apply_op, OpError
+from .process_context import ProcessContext
+
 
 # -----------------------------
 # Logging setup
@@ -62,35 +64,35 @@ def run_pipeline(req: PipelineRequest):
         req.output_mode,
     )
 
-    # --- Stock build ---
+    # --- ProcessContext 初期化（Stock build + CSYS 準備） ---
     try:
-        work = build_stock(req.stock)
+        ctx = ProcessContext(req)
     except OpError as e:
-        logger.exception("STOCK build input error")
-        raise HTTPException(status_code=400, detail={
-            "status": "error",
-            "message": str(e),
-            "step": 0,
-            "op": "stock",
-        })
+        logger.exception("STOCK build / CSYS input error")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "status": "error",
+                "message": str(e),
+                "step": 0,
+                "op": "stock",
+            },
+        )
     except Exception as e:
-        logger.exception("STOCK build internal error")
-        raise HTTPException(status_code=500, detail={
-            "status": "error",
-            "message": f"stock build internal error: {e}",
-            "step": 0,
-            "op": "stock",
-        })
+        logger.exception("STOCK build / CSYS internal error")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "status": "error",
+                "message": f"stock/csys init internal error: {e}",
+                "step": 0,
+                "op": "stock",
+            },
+        )
 
-    before = work
     steps_result: list[StepResult] = []
 
-    # export dir
     output_dir = OUTDIR
-
-    # allow exporting by format: STL and STEP are supported when the
-    # CadQuery/OCC backend is available — exporters will pick format
-    # from the filename extension (e.g. .stl, .step, .stp).
     do_export = req.output_mode in ("stl", "step") and not req.dry_run
 
     for idx, op in enumerate(req.operations, start=1):
@@ -104,25 +106,31 @@ def run_pipeline(req: PipelineRequest):
         )
 
         try:
-            after, removed = apply_op(before, op)
+            after, removed = ctx.apply_operation(op)
         except OpError as e:
             logger.exception("STEP %02d input error", idx)
-            raise HTTPException(status_code=400, detail={
-                "status": "error",
-                "message": str(e),
-                "step": idx,
-                "op": op.op,
-                "name": op.name,
-            })
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "status": "error",
+                    "message": str(e),
+                    "step": idx,
+                    "op": op.op,
+                    "name": op.name,
+                },
+            )
         except Exception as e:
             logger.exception("STEP %02d internal error", idx)
-            raise HTTPException(status_code=500, detail={
-                "status": "error",
-                "message": f"internal error: {e}",
-                "step": idx,
-                "op": op.op,
-                "name": op.name,
-            })
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "status": "error",
+                    "message": f"internal error: {e}",
+                    "step": idx,
+                    "op": op.op,
+                    "name": op.name,
+                },
+            )
 
         logger.info("STEP %02d OK op=%s", idx, op.op)
 
@@ -159,8 +167,6 @@ def run_pipeline(req: PipelineRequest):
                 removed=str(removed_path).replace("\\", "/") if removed_path else None,
             )
         )
-
-        before = after
 
     return PipelineResponse(status="ok", steps=steps_result)
 
