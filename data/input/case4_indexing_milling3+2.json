@@ -119,8 +119,8 @@
     }
   ],
 
-  "output_mode": "step",
-  "file_template_solid": "case4_{step:02d}_{name}_solid.step",
-  "file_template_removed": "case4_{step:02d}_{name}_removed.step",
+  "output_mode": "stl",
+  "file_template_solid": "case4_{step:02d}_{name}_solid.stl",
+  "file_template_removed": "case4_{step:02d}_{name}_removed.stl",
   "dry_run": false
 }
