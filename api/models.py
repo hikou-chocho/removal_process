@@ -8,6 +8,7 @@ Num = Union[float, int]
 class Operation(BaseModel):
     op: str
     name: Optional[str] = None
+    setup: Optional[str] = None
     selector: Optional[str] = None                # CadQuery selector (e.g. ">Z", "<X", "|Y")
     workplane: Optional[Literal["XY", "YZ", "ZX"]] = None
     csys: Optional[Dict[str, List[float]]] = None # 予約（STEP2で回転・平行移動対応）
@@ -21,6 +22,7 @@ class PipelineRequest(BaseModel):
     units: Literal["mm","inch"] = "mm"
     origin: Literal["world","center","stock_min"] = "world"
     stock: Stock
+    setups: List[Dict[str, Any]] = Field(default_factory=list)
     operations: List[Operation]
     output_mode: Literal["stl","step","show","none"] = "stl"
     file_template_solid: str = "case_{step:02d}_{name}_solid.stl"

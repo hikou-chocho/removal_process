@@ -1,0 +1,155 @@
+{
+  "units": "mm",
+  "origin": "world",
+  "stock": {
+    "type": "block",
+    "params": {
+      "w": 120.0,
+      "d": 60.0,
+      "h": 40.0
+    }
+  },
+  "setups": [
+    {
+      "id": "A0C0_TOP",
+      "label": "Index A0C0 Top",
+      "orientation": {
+        "rx_deg": 0.0,
+        "ry_deg": 0.0,
+        "rz_deg": 0.0
+      }
+    },
+    {
+      "id": "A90C0_FRONT",
+      "label": "Index A90C0 Front",
+      "orientation": {
+        "rx_deg": 90.0,
+        "ry_deg": 0.0,
+        "rz_deg": 0.0
+      }
+    },
+    {
+      "id": "A90C90_RIGHT",
+      "label": "Index A90C90 Right",
+      "orientation": {
+        "rx_deg": -90.0,
+        "ry_deg": 0.0,
+        "rz_deg": 90.0
+      }
+    }
+  ],
+  "operations": [
+    {
+      "op": "setup:index",
+      "name": "Index_A0C0",
+      "setup": "A0C0_TOP",
+      "selector": null,
+      "workplane": null,
+      "csys": null,
+      "params": {
+        "output_snapshot": true
+      }
+    },
+    {
+      "op": "mill:face",
+      "name": "FaceTop",
+      "setup": "A0C0_TOP",
+      "selector": ">Z",
+      "workplane": null,
+      "csys": null,
+      "params": {
+        "depth": 2.0
+      }
+    },
+    {
+      "op": "mill:pocket_profile",
+      "name": "TopPocket",
+      "setup": "A0C0_TOP",
+      "selector": ">Z",
+      "workplane": null,
+      "csys": null,
+      "params": {
+        "profile_type": "rect",
+        "center": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "size": {
+          "x": 40.0,
+          "y": 30.0
+        },
+        "depth": 10.0,
+        "corner_radius": 5.0
+      }
+    },
+    {
+      "op": "setup:index",
+      "name": "Index_A90C0",
+      "setup": "A90C0_FRONT",
+      "selector": null,
+      "workplane": null,
+      "csys": null,
+      "params": {
+        "output_snapshot": true
+      }
+    },
+    {
+      "op": "mill:pocket_profile",
+      "name": "FrontPocket",
+      "setup": "A90C0_FRONT",
+      "selector": ">Z",
+      "workplane": null,
+      "csys": null,
+      "params": {
+        "profile_type": "rect",
+        "center": {
+          "x": 20.0,
+          "y": 0.0
+        },
+        "size": {
+          "x": 60.0,
+          "y": 20.0
+        },
+        "depth": 8.0,
+        "corner_radius": 4.0
+      }
+    },
+    {
+      "op": "setup:index",
+      "name": "Index_A90C90",
+      "setup": "A90C90_RIGHT",
+      "selector": null,
+      "workplane": null,
+      "csys": null,
+      "params": {
+        "output_snapshot": true
+      }
+    },
+    {
+      "op": "mill:hole_pattern",
+      "name": "SideHoles",
+      "setup": "A90C90_RIGHT",
+      "selector": ">Z",
+      "workplane": null,
+      "csys": null,
+      "params": {
+        "pattern": "line",
+        "dia": 8.0,
+        "depth": 30.0,
+        "count": 3,
+        "start": {
+          "x": -20.0,
+          "y": 0.0
+        },
+        "end": {
+          "x": 20.0,
+          "y": 0.0
+        }
+      }
+    }
+  ],
+  "output_mode": "stl",
+  "file_template_solid": "case4a_{step:02d}_{name}_solid.stl",
+  "file_template_removed": "case4a_{step:02d}_{name}_removed.stl",
+  "dry_run": false
+}

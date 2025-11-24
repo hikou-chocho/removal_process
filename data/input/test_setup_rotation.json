@@ -1,0 +1,44 @@
+{
+  "units": "mm",
+  "origin": "world",
+
+  "stock": {
+    "type": "block",
+    "params": { "w": 80, "d": 60, "h": 30 }
+  },
+
+  "setups": [
+    {
+      "id": "S1",
+      "label": "rot_z_90",
+      "orientation": { "rx_deg": 30.0, "ry_deg": 30.0, "rz_deg": 60.0 }
+    }
+  ],
+
+  "operations": [
+    {
+      "op": "setup:index",
+      "name": "UseSetupS1",
+      "setup": "S1",
+      "params": { 
+        "output_snapshot": true
+     }
+    },
+    {
+      "op": "drill:hole",
+      "name": "HoleAtX10",
+      "selector": ">Z",
+      "params": {
+        "dia": 5,
+        "depth": 15,
+        "x": 10.0,
+        "y": 0.0
+      }
+    }
+  ],
+
+  "output_mode": "stl",
+  "file_template_solid": "test_{step:02d}_{name}_solid.stl",
+  "file_template_removed": "test_{step:02d}_{name}_removed.stl",
+  "dry_run": false
+}
