@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Step Milling Feature",
+  "description": "Single level step on a planar face.",
+  "type": "object",
+  "properties": {
+    "feature_type": {
+      "type": "string",
+      "const": "step_milling_feature"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique feature identifier."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "object",
+          "properties": {
+            "primary_standard": {
+              "type": "string"
+            },
+            "reference_standards": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "primary_standard"
+          ],
+          "default": {
+            "primary_standard": "ISO 10303-238",
+            "reference_standards": [
+              "ISO 10303-224"
+            ]
+          }
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "csys_id": {
+          "type": "string"
+        },
+        "step_direction": {
+          "type": "string",
+          "enum": [
+            "+X",
+            "-X",
+            "+Y",
+            "-Y"
+          ]
+        },
+        "step_height": {
+          "type": "number"
+        },
+        "step_width": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "csys_id",
+        "step_direction",
+        "step_height",
+        "step_width",
+        "length"
+      ]
+    }
+  },
+  "required": [
+    "feature_type",
+    "id",
+    "csys_id",
+    "step_direction",
+    "step_height",
+    "step_width",
+    "length"
+  ],
+  "additionalProperties": false
+}

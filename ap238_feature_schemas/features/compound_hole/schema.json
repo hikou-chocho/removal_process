@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Compound Hole Feature",
+  "description": "Hole composed of multiple segments (drill+ream+CSK etc.).",
+  "type": "object",
+  "properties": {
+    "feature_type": {
+      "type": "string",
+      "const": "compound_hole"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique feature identifier."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "object",
+          "properties": {
+            "primary_standard": {
+              "type": "string"
+            },
+            "reference_standards": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "primary_standard"
+          ],
+          "default": {
+            "primary_standard": "ISO 10303-238",
+            "reference_standards": [
+              "ISO 14649-11"
+            ]
+          }
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "csys_id": {
+          "type": "string"
+        },
+        "origin_x": {
+          "type": "number"
+        },
+        "origin_y": {
+          "type": "number"
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "+Z",
+            "-Z",
+            "+X",
+            "-X",
+            "+Y",
+            "-Y"
+          ]
+        },
+        "segments": {
+          "type": "array",
+          "description": "Ordered axial segments from entry to exit.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "segment_type": {
+                "type": "string",
+                "enum": [
+                  "drill",
+                  "ream",
+                  "bore",
+                  "counterbore",
+                  "countersink",
+                  "thread"
+                ]
+              },
+              "diameter": {
+                "type": "number"
+              },
+              "length": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "segment_type",
+              "diameter",
+              "length"
+            ]
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "csys_id",
+        "origin_x",
+        "origin_y",
+        "axis",
+        "segments"
+      ]
+    }
+  },
+  "required": [
+    "feature_type",
+    "id",
+    "csys_id",
+    "origin_x",
+    "origin_y",
+    "axis",
+    "segments"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Rectangular Slot Feature",
+  "description": "Prismatic rectangular slot (keyway-like).",
+  "type": "object",
+  "properties": {
+    "feature_type": {
+      "type": "string",
+      "const": "slot_rectangular"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique feature identifier."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "object",
+          "properties": {
+            "primary_standard": {
+              "type": "string"
+            },
+            "reference_standards": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "primary_standard"
+          ],
+          "default": {
+            "primary_standard": "ISO 10303-238",
+            "reference_standards": [
+              "ISO 10303-224"
+            ]
+          }
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "csys_id": {
+          "type": "string"
+        },
+        "start_x": {
+          "type": "number"
+        },
+        "start_y": {
+          "type": "number"
+        },
+        "end_x": {
+          "type": "number"
+        },
+        "end_y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "depth": {
+          "type": "number"
+        },
+        "end_radius": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Optional semicircular ends radius."
+        }
+      },
+      "required": [
+        "csys_id",
+        "start_x",
+        "start_y",
+        "end_x",
+        "end_y",
+        "width",
+        "depth",
+        "end_radius"
+      ]
+    }
+  },
+  "required": [
+    "feature_type",
+    "id",
+    "csys_id",
+    "start_x",
+    "start_y",
+    "end_x",
+    "end_y",
+    "width",
+    "depth"
+  ],
+  "additionalProperties": false
+}

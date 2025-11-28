@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "2D Profile Milling Feature",
+  "description": "General 2D profile/contour feature on a planar face.",
+  "type": "object",
+  "properties": {
+    "feature_type": {
+      "type": "string",
+      "const": "profile_2d"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique feature identifier."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "object",
+          "properties": {
+            "primary_standard": {
+              "type": "string"
+            },
+            "reference_standards": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "primary_standard"
+          ],
+          "default": {
+            "primary_standard": "ISO 10303-238",
+            "reference_standards": [
+              "ISO 10303-224"
+            ]
+          }
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "csys_id": {
+          "type": "string"
+        },
+        "plane_axis": {
+          "type": "string",
+          "enum": [
+            "+Z",
+            "-Z"
+          ],
+          "description": "Axis normal to the profile plane in CSYS."
+        },
+        "profile": {
+          "type": "array",
+          "description": "Ordered list of 2D points defining the closed contour.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ]
+          },
+          "minItems": 2
+        },
+        "depth": {
+          "type": "number",
+          "description": "Machining depth along plane_axis."
+        }
+      },
+      "required": [
+        "csys_id",
+        "plane_axis",
+        "profile",
+        "depth"
+      ]
+    }
+  },
+  "required": [
+    "feature_type",
+    "id",
+    "csys_id",
+    "plane_axis",
+    "profile",
+    "depth"
+  ],
+  "additionalProperties": false
+}

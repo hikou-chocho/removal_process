@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Round Slot Feature",
+  "description": "Circular slot feature (annular).",
+  "type": "object",
+  "properties": {
+    "feature_type": {
+      "type": "string",
+      "const": "slot_round"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique feature identifier."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "object",
+          "properties": {
+            "primary_standard": {
+              "type": "string"
+            },
+            "reference_standards": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "primary_standard"
+          ],
+          "default": {
+            "primary_standard": "ISO 10303-238",
+            "reference_standards": [
+              "ISO 10303-224"
+            ]
+          }
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "csys_id": {
+          "type": "string"
+        },
+        "center_x": {
+          "type": "number"
+        },
+        "center_y": {
+          "type": "number"
+        },
+        "inner_radius": {
+          "type": "number"
+        },
+        "outer_radius": {
+          "type": "number"
+        },
+        "start_angle_deg": {
+          "type": "number"
+        },
+        "end_angle_deg": {
+          "type": "number"
+        },
+        "depth": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "csys_id",
+        "center_x",
+        "center_y",
+        "inner_radius",
+        "outer_radius",
+        "start_angle_deg",
+        "end_angle_deg",
+        "depth"
+      ]
+    }
+  },
+  "required": [
+    "feature_type",
+    "id",
+    "csys_id",
+    "center_x",
+    "center_y",
+    "inner_radius",
+    "outer_radius",
+    "start_angle_deg",
+    "end_angle_deg",
+    "depth"
+  ],
+  "additionalProperties": false
+}

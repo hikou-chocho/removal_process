@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Counterbored Hole Feature",
+  "description": "Hole with cylindrical counterbore.",
+  "type": "object",
+  "properties": {
+    "feature_type": {
+      "type": "string",
+      "const": "counterbored_hole"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique feature identifier."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "object",
+          "properties": {
+            "primary_standard": {
+              "type": "string"
+            },
+            "reference_standards": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "primary_standard"
+          ],
+          "default": {
+            "primary_standard": "ISO 10303-238",
+            "reference_standards": [
+              "ISO 14649-11"
+            ]
+          }
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "csys_id": {
+          "type": "string"
+        },
+        "origin_x": {
+          "type": "number"
+        },
+        "origin_y": {
+          "type": "number"
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "+Z",
+            "-Z",
+            "+X",
+            "-X",
+            "+Y",
+            "-Y"
+          ]
+        },
+        "hole_diameter": {
+          "type": "number"
+        },
+        "hole_depth": {
+          "type": "number"
+        },
+        "counterbore_diameter": {
+          "type": "number"
+        },
+        "counterbore_depth": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "csys_id",
+        "origin_x",
+        "origin_y",
+        "axis",
+        "hole_diameter",
+        "hole_depth",
+        "counterbore_diameter",
+        "counterbore_depth"
+      ]
+    }
+  },
+  "required": [
+    "feature_type",
+    "id",
+    "csys_id",
+    "origin_x",
+    "origin_y",
+    "axis",
+    "hole_diameter",
+    "counterbore_diameter"
+  ],
+  "additionalProperties": false
+}

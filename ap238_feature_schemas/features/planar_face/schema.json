@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Planar Face Feature",
+  "description": "Flat machined surface, AP238 planar_milling_feature equivalent.",
+  "type": "object",
+  "properties": {
+    "feature_type": {
+      "type": "string",
+      "const": "planar_face"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique feature identifier."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "object",
+          "properties": {
+            "primary_standard": {
+              "type": "string"
+            },
+            "reference_standards": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "primary_standard"
+          ],
+          "default": {
+            "primary_standard": "ISO 10303-238",
+            "reference_standards": [
+              "ISO 10303-224",
+              "ISO 14649-11"
+            ]
+          }
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "csys_id": {
+          "type": "string",
+          "description": "Reference CSYS identifier."
+        },
+        "normal_axis": {
+          "type": "string",
+          "enum": [
+            "+X",
+            "-X",
+            "+Y",
+            "-Y",
+            "+Z",
+            "-Z"
+          ],
+          "description": "Surface normal direction relative to CSYS."
+        },
+        "z_level": {
+          "type": "number",
+          "description": "Plane position along the normal axis in CSYS length units."
+        },
+        "size_x": {
+          "type": "number",
+          "description": "Extent in local X direction (optional for infinite or bounded by other features)."
+        },
+        "size_y": {
+          "type": "number",
+          "description": "Extent in local Y direction."
+        }
+      },
+      "required": [
+        "csys_id",
+        "normal_axis",
+        "z_level",
+        "size_x",
+        "size_y"
+      ]
+    }
+  },
+  "required": [
+    "feature_type",
+    "id",
+    "csys_id",
+    "normal_axis",
+    "z_level"
+  ],
+  "additionalProperties": false
+}

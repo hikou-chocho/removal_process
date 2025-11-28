@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Rectangular Pocket Feature",
+  "description": "Rectangular pocket on a planar surface.",
+  "type": "object",
+  "properties": {
+    "feature_type": {
+      "type": "string",
+      "const": "pocket_rectangular"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique feature identifier."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "object",
+          "properties": {
+            "primary_standard": {
+              "type": "string"
+            },
+            "reference_standards": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "primary_standard"
+          ],
+          "default": {
+            "primary_standard": "ISO 10303-238",
+            "reference_standards": [
+              "ISO 10303-224"
+            ]
+          }
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "csys_id": {
+          "type": "string"
+        },
+        "origin_x": {
+          "type": "number",
+          "description": "Pocket center X in CSYS."
+        },
+        "origin_y": {
+          "type": "number",
+          "description": "Pocket center Y in CSYS."
+        },
+        "width": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        },
+        "corner_radius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "number"
+        },
+        "open_side": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            null,
+            "+X",
+            "-X",
+            "+Y",
+            "-Y"
+          ],
+          "description": "Open side direction if pocket is open to an edge."
+        }
+      },
+      "required": [
+        "csys_id",
+        "origin_x",
+        "origin_y",
+        "width",
+        "length",
+        "corner_radius",
+        "depth",
+        "open_side"
+      ]
+    }
+  },
+  "required": [
+    "feature_type",
+    "id",
+    "csys_id",
+    "origin_x",
+    "origin_y",
+    "width",
+    "length",
+    "depth"
+  ],
+  "additionalProperties": false
+}

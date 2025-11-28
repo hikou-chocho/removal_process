@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Countersunk Hole Feature",
+  "description": "Hole with conical countersink.",
+  "type": "object",
+  "properties": {
+    "feature_type": {
+      "type": "string",
+      "const": "countersunk_hole"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique feature identifier."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "object",
+          "properties": {
+            "primary_standard": {
+              "type": "string"
+            },
+            "reference_standards": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "primary_standard"
+          ],
+          "default": {
+            "primary_standard": "ISO 10303-238",
+            "reference_standards": [
+              "ISO 14649-11"
+            ]
+          }
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "csys_id": {
+          "type": "string"
+        },
+        "origin_x": {
+          "type": "number"
+        },
+        "origin_y": {
+          "type": "number"
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "+Z",
+            "-Z",
+            "+X",
+            "-X",
+            "+Y",
+            "-Y"
+          ]
+        },
+        "hole_diameter": {
+          "type": "number"
+        },
+        "hole_depth": {
+          "type": "number"
+        },
+        "countersink_diameter": {
+          "type": "number"
+        },
+        "countersink_angle_deg": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "csys_id",
+        "origin_x",
+        "origin_y",
+        "axis",
+        "hole_diameter",
+        "hole_depth",
+        "countersink_diameter",
+        "countersink_angle_deg"
+      ]
+    }
+  },
+  "required": [
+    "feature_type",
+    "id",
+    "csys_id",
+    "origin_x",
+    "origin_y",
+    "axis",
+    "hole_diameter",
+    "countersink_diameter",
+    "countersink_angle_deg"
+  ],
+  "additionalProperties": false
+}

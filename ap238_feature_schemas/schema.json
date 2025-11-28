@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/casen_with_features.schema.json",
+  "title": "Removal Process CaseN Pipeline (with L0 Features)",
+  "type": "object",
+  "description": "CaseN.json format for removal_process, extended to reference AP238-based L0 feature schemas.",
+
+  "properties": {
+    "units": {
+      "type": "string",
+      "description": "Global length unit, e.g. \"mm\"."
+    },
+    "origin": {
+      "type": "string",
+      "description": "Global origin / reference frame, e.g. \"world\"."
+    },
+
+    "stock": {
+      "$ref": "#/$defs/stock"
+    },
+
+    "csys_list": {
+      "type": "array",
+      "description": "List of coordinate systems (WCS, indexed CSYS, etc.).",
+      "items": {
+        "$ref": "#/$defs/csys"
+      }
+    },
+
+    "operations": {
+      "type": "array",
+      "description": "Sequential machining operations applied to the stock.",
+      "items": {
+        "$ref": "#/$defs/operation"
+      },
+      "minItems": 1
+    },
+
+    "output_mode": {
+      "type": "string",
+      "description": "Output representation of the final model.",
+      "enum": ["stl", "step"]
+    },
+
+    "file_template_solid": {
+      "type": "string",
+      "description": "File name template for remaining solid (e.g. \"case1_{step:02d}_{name}_solid.step\")."
+    },
+    "file_template_removed": {
+      "type": "string",
+      "description": "File name template for removed volume (e.g. \"case1_{step:02d}_{name}_removed.step\")."
+    },
+
+    "dry_run": {
+      "type": "boolean",
+      "description": "If true, geometry is not generated; pipeline only validated."
+    }
+  },
+
+  "required": ["units", "origin", "stock", "operations", "output_mode"],
+  "additionalProperties": false,
+
+  "$defs": {
+    "stock": {
+      "type": "object",
+      "description": "Initial workpiece definition.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["block", "cylinder"],
+          "description": "Primitive stock type."
+        },
+        "params": {
+          "oneOf": [
+            {
+              "type": "object",
+              "description": "Rectangular block stock: width (X), height (Z), depth (Y).",
+              "properties": {
+                "w": { "type": "number", "description": "Width along X." },
+                "h": { "type": "number", "description": "Height along Z." },
+                "d": { "type": "number", "description": "Depth along Y." }
+              },
+              "required": ["w", "h", "d"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "description": "Cylindrical stock: diameter and height.",
+              "properties": {
+                "dia": { "type": "number", "description": "Cylinder diameter." },
+                "h":   { "type": "number", "description": "Cylinder height along axis." }
+              },
+              "required": ["dia", "h"],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": ["type", "params"],
+      "additionalProperties": false
+    },
+
+    "csys": {
+      "type": "object",
+      "description": "Coordinate system definition (world or local).",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "CSYS name (e.g. \"WCS\", \"CSYS_A0C0_TOP\")."
+        },
+        "role": {
+          "type": "string",
+          "description": "Role of the CSYS (e.g. \"world\")."
+        },
+        "parent": {
+          "type": "string",
+          "description": "Parent CSYS name. Optional for WCS."
+        },
+        "origin": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "z": { "type": "number" }
+          },
+          "required": ["x", "y", "z"],
+          "additionalProperties": false
+        },
+        "rpy_deg": {
+          "type": "object",
+          "description": "Roll/Pitch/Yaw in degrees.",
+          "properties": {
+            "r": { "type": "number" },
+            "p": { "type": "number" },
+            "y": { "type": "number" }
+          },
+          "required": ["r", "p", "y"],
+          "additionalProperties": false
+        },
+        "machine_abc_deg": {
+          "type": "object",
+          "description": "Machine A/C (or B/C) axis angles in degrees (for 3+2 index).",
+          "properties": {
+            "a": { "type": "number" },
+            "c": { "type": "number" }
+          },
+          "required": ["a", "c"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "origin", "rpy_deg"],
+      "additionalProperties": false
+    },
+
+    "operation": {
+      "type": "object",
+      "description": "Single machining operation in the pipeline.",
+      "properties": {
+        "op": {
+          "type": "string",
+          "description": "Operation type (e.g. \"mill:face\", \"mill:profile\", \"drill:hole\", \"lathe:turn_od_profile\", \"setup:index\")."
+        },
+        "name": {
+          "type": "string",
+          "description": "Operation name / identifier."
+        },
+        "selector": {
+          "type": ["string", "null"],
+          "description": "Geometric selector (e.g. \">Z\") or null."
+        },
+        "csys_ref": {
+          "type": "string",
+          "description": "Optional reference to csys_list[].name used by this operation."
+        },
+        "params": {
+          "type": "object",
+          "description": "Operation-specific parameters. For existing CaseN.json this remains flexible.",
+          "additionalProperties": true
+        },
+
+        "feature": {
+          "description": "Optional AP238-based L0 feature definition associated with this operation.",
+          "oneOf": [
+            { "$ref": "features/planar_face/schema.json" },
+            { "$ref": "features/profile_2d/schema.json" },
+            { "$ref": "features/pocket_rectangular/schema.json" },
+            { "$ref": "features/pocket_round/schema.json" },
+            { "$ref": "features/pocket_irregular/schema.json" },
+            { "$ref": "features/slot_rectangular/schema.json" },
+            { "$ref": "features/slot_round/schema.json" },
+            { "$ref": "features/slot_irregular/schema.json" },
+            { "$ref": "features/step_milling_feature/schema.json" },
+            { "$ref": "features/boss_rectangular/schema.json" },
+            { "$ref": "features/boss_circular/schema.json" },
+            { "$ref": "features/simple_hole/schema.json" },
+            { "$ref": "features/counterbored_hole/schema.json" },
+            { "$ref": "features/countersunk_hole/schema.json" },
+            { "$ref": "features/threaded_hole/schema.json" },
+            { "$ref": "features/compound_hole/schema.json" },
+            { "$ref": "features/turn_od_profile/schema.json" },
+            { "$ref": "features/turn_id_profile/schema.json" },
+            { "$ref": "features/groove_turning/schema.json" },
+            { "$ref": "features/thread_turning/schema.json" },
+            { "$ref": "features/freeform_surface_feature/schema.json" },
+            { "$ref": "features/swarf_surface_feature/schema.json" },
+            { "$ref": "features/blade_surface_feature/schema.json" }
+          ]
+        }
+      },
+      "required": ["op", "name", "params"],
+      "additionalProperties": false
+    }
+  }
+}

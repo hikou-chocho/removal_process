@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Turning Thread Feature",
+  "description": "External or internal thread in turning.",
+  "type": "object",
+  "properties": {
+    "feature_type": {
+      "type": "string",
+      "const": "thread_turning"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique feature identifier."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "object",
+          "properties": {
+            "primary_standard": {
+              "type": "string"
+            },
+            "reference_standards": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "primary_standard"
+          ],
+          "default": {
+            "primary_standard": "ISO 10303-238",
+            "reference_standards": [
+              "ISO 14649-121"
+            ]
+          }
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "csys_id": {
+          "type": "string"
+        },
+        "start_z": {
+          "type": "number"
+        },
+        "end_z": {
+          "type": "number"
+        },
+        "diameter": {
+          "type": "number"
+        },
+        "pitch": {
+          "type": "number"
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "OD",
+            "ID"
+          ]
+        },
+        "thread_standard": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "csys_id",
+        "start_z",
+        "end_z",
+        "diameter",
+        "pitch",
+        "side",
+        "thread_standard"
+      ]
+    }
+  },
+  "required": [
+    "feature_type",
+    "id",
+    "csys_id",
+    "start_z",
+    "end_z",
+    "diameter",
+    "pitch",
+    "side"
+  ],
+  "additionalProperties": false
+}
