@@ -63,7 +63,7 @@
           ],
           "description": "Surface normal direction relative to CSYS."
         },
-        "z_level": {
+        "depth": {
           "type": "number",
           "description": "Plane position along the normal axis in CSYS length units."
         },
@@ -79,7 +79,7 @@
       "required": [
         "csys_id",
         "normal_axis",
-        "z_level",
+        "depth",
         "size_x",
         "size_y"
       ]
@@ -90,7 +90,7 @@
     "id",
     "csys_id",
     "normal_axis",
-    "z_level"
+    "depth"
   ],
   "additionalProperties": false
 }

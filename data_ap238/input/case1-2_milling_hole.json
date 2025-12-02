@@ -1,0 +1,80 @@
+{
+  "units": "mm",
+  "origin": "world",
+  "stock": {
+    "type": "block",
+    "params": {
+      "w": 100,
+      "h": 25,
+      "d": 50
+    }
+  },
+  "csys_list": [
+    {
+      "name": "WCS",
+      "role": "world",
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rpy_deg": {
+        "r": 0,
+        "p": 0,
+        "y": 0
+      }
+    }
+  ],
+  "operations": [
+    {
+      "op": "mill:hole_pattern",
+      "name": "SideHoleLine",
+      "selector": ">Z",
+      "csys_ref": "WCS",
+      "params": {
+        "pattern": "line",
+        "dia": 6.0,
+        "depth": 20.0,
+        "count": 5,
+        "start": {
+          "x": -30.0,
+          "y": 0.0
+        },
+        "end": {
+          "x": 30.0,
+          "y": 0.0
+        }
+      },
+      "feature": {
+        "feature_type": "hole_pattern_linear",
+        "id": "F1_HOLE_PATTERN_LINE",
+        "metadata": {
+          "source": {
+            "primary_standard": "ISO 10303-238",
+            "reference_standards": [
+              "ISO 14649-11",
+              "ISO 10303-224"
+            ]
+          }
+        },
+        "params": {
+          "csys_id": "WCS",
+          "pattern_type": "linear",
+          "count": 5,
+          "start_x": -30.0,
+          "start_y": 0.0,
+          "end_x": 30.0,
+          "end_y": 0.0,
+          "hole_diameter": 6.0,
+          "hole_depth": 20.0,
+          "axis": "-Z",
+          "through": false
+        }
+      }
+    }
+  ],
+  "output_mode": "step",
+  "file_template_solid": "case1-2_{step:02d}_{name}_solid.step",
+  "file_template_removed": "case1-2_{step:02d}_{name}_removed.step",
+  "dry_run": false
+}
