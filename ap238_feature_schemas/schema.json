@@ -67,7 +67,7 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["block", "cylinder"],
+          "enum": ["block", "cylinder", "brep"],
           "description": "Primitive stock type."
         },
         "params": {
@@ -91,6 +91,16 @@
                 "h":   { "type": "number", "description": "Cylinder height along axis." }
               },
               "required": ["dia", "h"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "description": "B-Rep stock: refer to external STEP file or encoded BREP.",
+              "properties": {
+                "file": { "type": "string", "description": "Path to STEP file containing brep stock shape." },
+                "shape_id": { "type": "string", "description": "Identifier of the BREP shape inside the STEP file (optional)." }
+              },
+              "required": ["file"],
               "additionalProperties": false
             }
           ]
