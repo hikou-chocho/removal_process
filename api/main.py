@@ -6,7 +6,15 @@ import logging
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 import cadquery as cq
-from .models import PipelineRequest, PipelineResponse, StepResult
+from .models import (
+    PipelineRequest,
+    PipelineResponse,
+    StepResult,
+    NLStockRequest,
+    NLStockResponse,
+    NLFeatureRequest,
+    NLFeatureResponse,
+)
 from .cad_ops import OpError
 from .process_context import ProcessContext
 
@@ -42,6 +50,52 @@ def _export_stl(solid: cq.Workplane, path: Path):
     path.parent.mkdir(parents=True, exist_ok=True)
     exporters.export(solid, str(path))
 
+
+# ========= LLM 呼び出しプレースホルダ =========
+#
+# ここは環境に合わせて実装してください。
+# - Azure OpenAI / OpenAI / ローカル LLM など
+# - few-shot プロンプトは、前のやり取りで作成したものをそのまま使えます
+#
+# Phase1 では、とりあえず NotImplementedError を投げるか、
+# パターンマッチでダミー JSON を返す実装でも OK です。
+# ============================================
+
+
+async def call_stock_extractor(text: str, language: str | None = "ja") -> dict:
+    """
+    Natural language → {"stock": {...}} を返す LLM 呼び出しの薄いラッパー。
+
+    戻り値の想定スキーマ:
+        { "stock": { "type": "...", "params": { ... } } }
+    """
+    # TODO: ここに実際の LLM 呼び出し処理を実装
+    # 例:
+    #   - OpenAI Chat Completions を叩いて JSON をパース
+    #   - エラー時は HTTPException(500) 等を投げる
+    raise HTTPException(
+        status_code=501,
+        detail="call_stock_extractor is not implemented yet.",
+    )
+
+
+async def call_feature_extractor(text: str, language: str | None = "ja") -> dict:
+    """
+    Natural language → { "op": ..., "selector": ..., "params": {...} } を返す LLM ラッパー。
+
+    戻り値の想定スキーマ:
+        {
+          "op": "mill:face",
+          "selector": ">Z",
+          "params": { ... }
+        }
+    """
+    # TODO: ここに実際の LLM 呼び出し処理を実装
+    raise HTTPException(
+        status_code=501,
+        detail="call_feature_extractor is not implemented yet.",
+    )
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     logger.info(f">>> {request.method} {request.url.path}")
@@ -52,6 +106,77 @@ async def log_requests(request: Request, call_next):
     except Exception as ex:
         logger.exception(f"Unhandled exception during {request.method} {request.url.path}")
         raise
+
+
+# -----------------------------
+# Natural Language → FeatureGraph API
+# （Phase1 追加部分）
+# -----------------------------
+
+
+@app.post("/nl/stock", response_model=NLStockResponse)
+async def nl_stock(req: NLStockRequest) -> NLStockResponse:
+    """
+    素材命令（日本語） → Stock JSON
+
+    フロントエンド想定フロー:
+      1. ユーザーが素材命令を入力
+      2. /nl/stock に POST
+      3. 返ってきた `stock` をクライアント側 FeatureGraph に保持
+    """
+    logger.info(">>> POST /nl/stock")
+
+    # LLM に投げて { "stock": {...} } をもらう
+    result = await call_stock_extractor(req.text, language=req.language)
+
+    if "stock" not in result:
+        logger.error("Stock extractor result missing 'stock' key: %s", result)
+        raise HTTPException(
+            status_code=500,
+            detail="LLM stock extractor did not return 'stock' key.",
+        )
+
+    # Pydantic Stock モデルにバインド
+    from .models import Stock  # ローカル import で循環参照を回避
+
+    stock_obj = Stock(**result["stock"])
+    logger.info("NL stock extracted: type=%s params=%s", stock_obj.type, stock_obj.params)
+
+    return NLStockResponse(stock=stock_obj)
+
+
+@app.post("/nl/feature", response_model=NLFeatureResponse)
+async def nl_feature(req: NLFeatureRequest) -> NLFeatureResponse:
+    """
+    フィーチャ命令（日本語） → 単一 Operation JSON
+
+    フロントエンド想定フロー:
+      - FeatureGraph.operations に対して 1発話1フィーチャで append。
+      - 最終的に /pipeline/run にまとめて投げる。
+    """
+    logger.info(">>> POST /nl/feature")
+
+    result = await call_feature_extractor(req.text, language=req.language)
+
+    # 最低限のバリデーション
+    if "op" not in result or "params" not in result:
+        logger.error("Feature extractor result missing required keys: %s", result)
+        raise HTTPException(
+            status_code=500,
+            detail="LLM feature extractor did not return required keys.",
+        )
+
+    from .models import Operation  # ローカル import で循環参照を回避
+
+    op_obj = Operation(**result)
+    logger.info(
+        "NL feature extracted: op=%s selector=%s params=%s",
+        op_obj.op,
+        getattr(op_obj, "selector", None),
+        op_obj.params,
+    )
+
+    return NLFeatureResponse(op=op_obj)
 
 @app.post("/pipeline/run", response_model=PipelineResponse)
 async def run_pipeline(req: PipelineRequest) -> PipelineResponse:

@@ -39,3 +39,42 @@ class PipelineResponse(BaseModel):
     status: Literal["ok","error"]
     message: Optional[str] = None
     steps: List[StepResult] = Field(default_factory=list)
+
+
+# ============================================================
+# --- Natural Language Models (NL-only request/response) ---
+# These types are added for NL frontend integration and do not
+# change existing models or APIs that use the core Pipeline types.
+# ============================================================
+
+
+class NLStockRequest(BaseModel):
+    """
+    Natural-language → Stock extraction
+    """
+    text: str = Field(..., description="User input describing the raw stock in Japanese or other language.")
+    language: Optional[str] = Field("ja", description="Language code. Default: ja")
+
+
+class NLStockResponse(BaseModel):
+    """
+    Output of Stock Extractor LLM: { stock: {...} }
+    """
+    stock: Stock
+
+
+class NLFeatureRequest(BaseModel):
+    """
+    Natural-language → Feature extraction
+    A single user utterance should describe exactly one feature.
+    """
+    text: str = Field(..., description="User input describing a single machining feature.")
+    language: Optional[str] = Field("ja", description="Language code. Default: ja")
+
+
+class NLFeatureResponse(BaseModel):
+    """
+    Output of Feature Extractor LLM: Operation-shaped object
+    """
+    op: Operation
+
