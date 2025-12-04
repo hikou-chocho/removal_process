@@ -12,6 +12,12 @@ from fastapi import HTTPException
 logger = logging.getLogger("llm_client")
 
 # ============================================
+# ダミーモード設定
+# ============================================
+
+NL_DUMMY_MODE = os.getenv("NL_DUMMY_MODE", "0") == "1"
+
+# ============================================
 # Azure OpenAI 設定
 # ============================================
 
@@ -22,17 +28,21 @@ AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-pre
 # デプロイ名（モデル名ではなく「Azure 上の deployment 名」）
 AZURE_OPENAI_STOCK_DEPLOYMENT = os.getenv(
     "AZURE_OPENAI_STOCK_DEPLOYMENT",
-    "nl-stock-deployment",  # お好みで変更
+    "nl-stock-deployment",
 )
 AZURE_OPENAI_FEATURE_DEPLOYMENT = os.getenv(
     "AZURE_OPENAI_FEATURE_DEPLOYMENT",
-    "nl-feature-deployment",  # お好みで変更
+    "nl-feature-deployment",
 )
 
 
 class LLMConfigError(RuntimeError):
     pass
 
+
+# ============================================
+# Azure OpenAI 呼び出し
+# ============================================
 
 async def _call_chat_completion_azure(
     deployment: str,
@@ -159,6 +169,31 @@ _STOCK_FEWSHOT_MESSAGES: List[Dict[str, Any]] = [
 ]
 
 
+# ============================================
+# ダミー実装（素材）
+# ============================================
+
+def _dummy_stock(text: str) -> Dict[str, Any]:
+    """
+    LLM なしで動かすための簡易ダミー。
+    入力に関係なく、ある程度まともな block を返す。
+    """
+    logger.info("[DUMMY] stock extractor called with text=%r", text)
+
+    # すこしだけ真面目に数値を拾うこともできるが、
+    # とりあえずは固定値で十分。
+    return {
+        "stock": {
+            "type": "block",
+            "params": {
+                "w": 100.0,
+                "d": 60.0,
+                "h": 20.0,
+            },
+        }
+    }
+
+
 async def call_stock_extractor(text: str, language: str | None = "ja") -> Dict[str, Any]:
     """
     素材命令（自然言語） → {\"stock\": {...}} を返す。
@@ -170,7 +205,12 @@ async def call_stock_extractor(text: str, language: str | None = "ja") -> Dict[s
             "params": { "w": 100.0, "d": 60.0, "h": 20.0 }
           }
         }
+    ダミーモード or 設定不足のときは _dummy_stock を使う。
     """
+    # ダミーモード or Azure 設定不足ならダミーに切り替え
+    if NL_DUMMY_MODE or not AZURE_OPENAI_ENDPOINT or not AZURE_OPENAI_API_KEY:
+        return _dummy_stock(text)
+
     messages = list(_STOCK_FEWSHOT_MESSAGES) + [
         {"role": "user", "content": text}
     ]
@@ -182,7 +222,8 @@ async def call_stock_extractor(text: str, language: str | None = "ja") -> Dict[s
         )
     except LLMConfigError as e:
         logger.error("LLM config error in call_stock_extractor: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        # 設定エラー時もダミーにフォールバックする
+        return _dummy_stock(text)
 
     # content は JSON 文字列を想定
     # First try direct parse; if it fails, attempt to extract JSON substring
@@ -287,6 +328,66 @@ _FEATURE_FEWSHOT_MESSAGES: List[Dict[str, Any]] = [
 ]
 
 
+# ============================================
+# ダミー実装（フィーチャ）
+# ============================================
+
+def _dummy_feature(text: str) -> Dict[str, Any]:
+  """
+  LLM なしで動かすための簡易フィーチャ推定。
+  超ラフにキーワードで判定する。
+  """
+  t = text.lower()
+  logger.info("[DUMMY] feature extractor called with text=%r", text)
+
+  # フェイスミル
+  if "フェイス" in text or "荒取り" in text or "フェース" in text:
+      return {
+          "op": "mill:face",
+          "selector": ">Z",
+          "params": {
+              "depth": 2.0,
+          },
+      }
+
+  # ポケット
+  if "ポケット" in text:
+      return {
+          "op": "mill:pocket_profile",
+          "name": "RectPocket",
+          "selector": ">Z",
+          "params": {
+              "profile_type": "rect",
+              "center": {"x": 0.0, "y": 0.0},
+              "size": {"x": 40.0, "y": 30.0},
+              "depth": 10.0,
+              "corner_radius": 4.0,
+          },
+      }
+
+  # 穴（ドリル）
+  if "穴" in text or "ドリル" in text:
+      return {
+          "op": "drill:hole",
+          "selector": ">Z",
+          "params": {
+              "dia": 10.0,
+              "depth": 15.0,
+              "x": 0.0,
+              "y": 0.0,
+          },
+      }
+
+  # それ以外は一旦「浅いフェイスミル」にしておく
+  return {
+      "op": "mill:face",
+      "selector": ">Z",
+      "params": {
+          "depth": 1.0,
+      },
+  }
+
+
 async def call_feature_extractor(text: str, language: str | None = "ja") -> Dict[str, Any]:
     """
     フィーチャ命令（自然言語） → 単一フィーチャ JSON を返す。
@@ -297,7 +398,11 @@ async def call_feature_extractor(text: str, language: str | None = "ja") -> Dict
           "selector": ">Z",
           "params": { "dia": 10.0, "depth": 15.0, "x": 0.0, "y": 0.0 }
         }
+    ダミーモード or 設定不足のときは _dummy_feature を使う。
     """
+    if NL_DUMMY_MODE or not AZURE_OPENAI_ENDPOINT or not AZURE_OPENAI_API_KEY:
+        return _dummy_feature(text)
+
     messages = list(_FEATURE_FEWSHOT_MESSAGES) + [
         {"role": "user", "content": text}
     ]
@@ -309,7 +414,8 @@ async def call_feature_extractor(text: str, language: str | None = "ja") -> Dict
         )
     except LLMConfigError as e:
         logger.error("LLM config error in call_feature_extractor: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        # 設定エラー時もダミーにフォールバック
+        return _dummy_feature(text)
 
     # Try direct JSON parse first, fall back to extraction if necessary
     try:
