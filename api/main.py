@@ -5,6 +5,7 @@ from pathlib import Path
 import logging
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 import cadquery as cq
 from .models import (
     PipelineRequest,
@@ -14,7 +15,10 @@ from .models import (
     NLStockResponse,
     NLFeatureRequest,
     NLFeatureResponse,
+    Stock,
+    Operation,
 )
+from .llm_client import call_stock_extractor, call_feature_extractor
 from .cad_ops import OpError
 from .process_context import ProcessContext
 
@@ -45,56 +49,24 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTDIR = ROOT / "data" / "output"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
+# 静的ファイル公開: Web UI と出力ディレクトリ
+app.mount(
+    "/ui",
+    StaticFiles(directory=str(ROOT / "web"), html=True),
+    name="ui",
+)
+
+app.mount(
+    "/output",
+    StaticFiles(directory=str(ROOT / "data" / "output")),
+    name="output",
+)
+
 def _export_stl(solid: cq.Workplane, path: Path):
     from cadquery import exporters
     path.parent.mkdir(parents=True, exist_ok=True)
     exporters.export(solid, str(path))
 
-
-# ========= LLM 呼び出しプレースホルダ =========
-#
-# ここは環境に合わせて実装してください。
-# - Azure OpenAI / OpenAI / ローカル LLM など
-# - few-shot プロンプトは、前のやり取りで作成したものをそのまま使えます
-#
-# Phase1 では、とりあえず NotImplementedError を投げるか、
-# パターンマッチでダミー JSON を返す実装でも OK です。
-# ============================================
-
-
-async def call_stock_extractor(text: str, language: str | None = "ja") -> dict:
-    """
-    Natural language → {"stock": {...}} を返す LLM 呼び出しの薄いラッパー。
-
-    戻り値の想定スキーマ:
-        { "stock": { "type": "...", "params": { ... } } }
-    """
-    # TODO: ここに実際の LLM 呼び出し処理を実装
-    # 例:
-    #   - OpenAI Chat Completions を叩いて JSON をパース
-    #   - エラー時は HTTPException(500) 等を投げる
-    raise HTTPException(
-        status_code=501,
-        detail="call_stock_extractor is not implemented yet.",
-    )
-
-
-async def call_feature_extractor(text: str, language: str | None = "ja") -> dict:
-    """
-    Natural language → { "op": ..., "selector": ..., "params": {...} } を返す LLM ラッパー。
-
-    戻り値の想定スキーマ:
-        {
-          "op": "mill:face",
-          "selector": ">Z",
-          "params": { ... }
-        }
-    """
-    # TODO: ここに実際の LLM 呼び出し処理を実装
-    raise HTTPException(
-        status_code=501,
-        detail="call_feature_extractor is not implemented yet.",
-    )
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):

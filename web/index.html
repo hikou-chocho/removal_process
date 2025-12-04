@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Natural Language CAD - Phase1 Mock (ESM)</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #viewer {
+      flex: 3;
+      background: #111;
+    }
+    #side {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #ccc;
+      background: #fafafa;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+    }
+    pre {
+      white-space: pre-wrap;
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="viewer"></div>
+
+  <div id="side">
+    <div style="padding:8px; border-bottom:1px solid #ccc;">
+      <textarea id="inputText"
+        placeholder="例：100×60×20 mm の直方体ブロック素材を用意する。"></textarea>
+      <div style="margin-top:6px; display:flex; gap:6px;">
+        <button id="btnStock">素材</button>
+        <button id="btnFeature">フィーチャ</button>
+        <button id="btnRun">生成</button>
+        <button id="btnReset">リセット</button>
+      </div>
+    </div>
+
+    <div style="flex:1; overflow:auto; padding:8px; border-bottom:1px solid #ccc;">
+      <strong>FeatureGraph</strong>
+      <pre id="fgJson"></pre>
+    </div>
+
+    <div style="flex:1; overflow:auto; padding:8px;">
+      <strong>ログ</strong>
+      <pre id="log"></pre>
+    </div>
+  </div>
+
+  <!-- script.js 内で Three.js ESM を import -->
+  <script type="module" src="script.js"></script>
+
+</body>
+</html>

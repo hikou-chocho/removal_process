@@ -4,3 +4,4 @@ pydantic>=1.10
 cadquery
 numpy
 python-dotenv
+httpx>=0.24.0
