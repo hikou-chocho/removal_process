@@ -24,93 +24,64 @@
       }
     }
   ],
-  "operations": [
+  "features": [
     {
-      "op": "lathe:face_cut",
-      "name": "FaceCut",
-      "selector": ">Z",
-      "csys_ref": "WCS",
-      "params": {
-        "depth": 2
-      },
-      "feature": {
-        "feature_type": "planar_face",
-        "id": "L2_F1_FACE_END",
-        "metadata": {
-          "source": {
-            "primary_standard": "ISO 10303-238",
-            "reference_standards": [
-              "ISO 10303-224",
-              "ISO 14649-12"
-            ]
-          }
-        },
-        "params": {
-          "csys_id": "WCS",
-          "normal_axis": "+Z",
-          "depth": 2.0,
-          "size_x": 50.0,
-          "size_y": 50.0
+      "feature_type": "planar_face",
+      "id": "L2_F1_FACE_END",
+      "metadata": {
+        "source": {
+          "primary_standard": "ISO 10303-238",
+          "reference_standards": [
+            "ISO 10303-224",
+            "ISO 14649-12"
+          ]
         }
+      },
+      "params": {
+        "csys_id": "WCS",
+        "normal_axis": "+Z",
+        "depth": 2.0,
+        "size_x": 50.0,
+        "size_y": 50.0
       }
     },
     {
-      "op": "lathe:turn_od",
-      "name": "OuterDiameter",
-      "selector": ">Z",
-      "csys_ref": "WCS",
-      "params": {
-        "target_dia": 45,
-        "length": 30
-      },
-      "feature": {
-        "feature_type": "turn_od_profile",
-        "id": "L2_F2_TURN_OD",
-        "metadata": {
-          "source": {
-            "primary_standard": "ISO 10303-238",
-            "reference_standards": [
-              "ISO 14649-12"
-            ]
-          }
-        },
-        "params": {
-          "csys_id": "WCS",
-          "profile": [
-            { "z": 0.0, "radius": 22.5 },
-            { "z": 30.0, "radius": 22.5 }
+      "feature_type": "turn_od_profile",
+      "id": "L2_F2_TURN_OD",
+      "metadata": {
+        "source": {
+          "primary_standard": "ISO 10303-238",
+          "reference_standards": [
+            "ISO 14649-12"
           ]
         }
+      },
+      "params": {
+        "csys_id": "WCS",
+        "profile": [
+          { "z": 0.0, "radius": 22.5 },
+          { "z": 30.0, "radius": 22.5 }
+        ]
       }
     },
     {
-      "op": "lathe:bore_id",
-      "name": "InnerDiameter",
-      "selector": ">Z",
-      "csys_ref": "WCS",
-      "params": {
-        "target_dia": 20,
-        "length": 30
-      },
-      "feature": {
-        "feature_type": "turn_id_profile",
-        "id": "L2_F3_BORE_ID",
-        "metadata": {
-          "source": {
-            "primary_standard": "ISO 10303-238",
-            "reference_standards": [
-              "ISO 14649-12",
-              "ISO 10303-224"
-            ]
-          }
-        },
-        "params": {
-          "csys_id": "WCS",
-          "profile": [
-            { "z": 0.0, "radius": 10.0 },
-            { "z": 30.0, "radius": 10.0 }
+      "feature_type": "turn_id_profile",
+      "id": "L2_F3_BORE_ID",
+      "metadata": {
+        "source": {
+          "primary_standard": "ISO 10303-238",
+          "reference_standards": [
+            "ISO 14649-12",
+            "ISO 10303-224"
           ]
         }
+      },
+      "params": {
+        "csys_id": "WCS",
+        "profile": [
+          { "z": 0.0, "radius": 10.0 },
+          { "z": 30.0, "radius": 10.0 }
+        ]
       }
     }
   ],

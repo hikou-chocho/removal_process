@@ -28,40 +28,27 @@
     }
   ],
 
-  "operations": [
+  "features": [
     {
-      "op": "mill:pocket_profile",
-      "name": "RectPocket",
-      "selector": ">Z",
-      "csys_ref": "WCS",
-      "params": {
-        "profile_type": "rect",
-        "center": { "x": 0.0, "y": 0.0 },
-        "size":   { "x": 40.0, "y": 30.0 },
-        "depth":  10.0,
-        "corner_radius": 4.0
-      },
-      "feature": {
-        "feature_type": "pocket_rectangular",
-        "id": "F1_RECT_POCKET",
-        "metadata": {
-          "source": {
-            "primary_standard": "ISO 10303-238",
-            "reference_standards": [
-              "ISO 10303-224"
-            ]
-          }
-        },
-        "params": {
-          "csys_id": "WCS",
-          "origin_x": 0.0,
-          "origin_y": 0.0,
-          "width": 40.0,
-          "length": 30.0,
-          "corner_radius": 4.0,
-          "depth": 10.0,
-          "open_side": null
+      "feature_type": "pocket_rectangular",
+      "id": "F1_RECT_POCKET",
+      "metadata": {
+        "source": {
+          "primary_standard": "ISO 10303-238",
+          "reference_standards": [
+            "ISO 10303-224"
+          ]
         }
+      },
+      "params": {
+        "csys_id": "WCS",
+        "origin_x": 0.0,
+        "origin_y": 0.0,
+        "width": 40.0,
+        "length": 30.0,
+        "corner_radius": 4.0,
+        "depth": 10.0,
+        "open_side": null
       }
     }
   ],

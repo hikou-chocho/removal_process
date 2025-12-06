@@ -27,11 +27,11 @@
       }
     },
 
-    "operations": {
+    "features": {
       "type": "array",
-      "description": "Sequential machining operations applied to the stock.",
+      "description": "Sequential L0 features applied to the stock.",
       "items": {
-        "$ref": "#/$defs/operation"
+        "$ref": "#/$defs/feature"
       },
       "minItems": 1
     },
@@ -57,7 +57,7 @@
     }
   },
 
-  "required": ["units", "origin", "stock", "operations", "output_mode"],
+  "required": ["units", "origin", "stock", "features", "output_mode"],
   "additionalProperties": false,
 
   "$defs": {
@@ -162,63 +162,33 @@
       "additionalProperties": false
     },
 
-    "operation": {
-      "type": "object",
-      "description": "Single machining operation in the pipeline.",
-      "properties": {
-        "op": {
-          "type": "string",
-          "description": "Operation type (e.g. \"mill:face\", \"mill:profile\", \"drill:hole\", \"lathe:turn_od_profile\", \"setup:index\")."
-        },
-        "name": {
-          "type": "string",
-          "description": "Operation name / identifier."
-        },
-        "selector": {
-          "type": ["string", "null"],
-          "description": "Geometric selector (e.g. \">Z\") or null."
-        },
-        "csys_ref": {
-          "type": "string",
-          "description": "Optional reference to csys_list[].name used by this operation."
-        },
-        "params": {
-          "type": "object",
-          "description": "Operation-specific parameters. For existing CaseN.json this remains flexible.",
-          "additionalProperties": true
-        },
-
-        "feature": {
-          "description": "Optional AP238-based L0 feature definition associated with this operation.",
-          "oneOf": [
-            { "$ref": "features/planar_face/schema.json" },
-            { "$ref": "features/profile_2d/schema.json" },
-            { "$ref": "features/pocket_rectangular/schema.json" },
-            { "$ref": "features/pocket_round/schema.json" },
-            { "$ref": "features/pocket_irregular/schema.json" },
-            { "$ref": "features/slot_rectangular/schema.json" },
-            { "$ref": "features/slot_round/schema.json" },
-            { "$ref": "features/slot_irregular/schema.json" },
-            { "$ref": "features/step_milling_feature/schema.json" },
-            { "$ref": "features/boss_rectangular/schema.json" },
-            { "$ref": "features/boss_circular/schema.json" },
-            { "$ref": "features/simple_hole/schema.json" },
-            { "$ref": "features/counterbored_hole/schema.json" },
-            { "$ref": "features/countersunk_hole/schema.json" },
-            { "$ref": "features/threaded_hole/schema.json" },
-            { "$ref": "features/compound_hole/schema.json" },
-            { "$ref": "features/turn_od_profile/schema.json" },
-            { "$ref": "features/turn_id_profile/schema.json" },
-            { "$ref": "features/groove_turning/schema.json" },
-            { "$ref": "features/thread_turning/schema.json" },
-            { "$ref": "features/freeform_surface_feature/schema.json" },
-            { "$ref": "features/swarf_surface_feature/schema.json" },
-            { "$ref": "features/blade_surface_feature/schema.json" }
-          ]
-        }
-      },
-      "required": ["op", "name", "params"],
-      "additionalProperties": false
+    "feature": {
+      "description": "AP238-based L0 feature definition.",
+      "oneOf": [
+        { "$ref": "features/planar_face/schema.json" },
+        { "$ref": "features/profile_2d/schema.json" },
+        { "$ref": "features/pocket_rectangular/schema.json" },
+        { "$ref": "features/pocket_round/schema.json" },
+        { "$ref": "features/pocket_irregular/schema.json" },
+        { "$ref": "features/slot_rectangular/schema.json" },
+        { "$ref": "features/slot_round/schema.json" },
+        { "$ref": "features/slot_irregular/schema.json" },
+        { "$ref": "features/step_milling_feature/schema.json" },
+        { "$ref": "features/boss_rectangular/schema.json" },
+        { "$ref": "features/boss_circular/schema.json" },
+        { "$ref": "features/simple_hole/schema.json" },
+        { "$ref": "features/counterbored_hole/schema.json" },
+        { "$ref": "features/countersunk_hole/schema.json" },
+        { "$ref": "features/threaded_hole/schema.json" },
+        { "$ref": "features/compound_hole/schema.json" },
+        { "$ref": "features/turn_od_profile/schema.json" },
+        { "$ref": "features/turn_id_profile/schema.json" },
+        { "$ref": "features/groove_turning/schema.json" },
+        { "$ref": "features/thread_turning/schema.json" },
+        { "$ref": "features/freeform_surface_feature/schema.json" },
+        { "$ref": "features/swarf_surface_feature/schema.json" },
+        { "$ref": "features/blade_surface_feature/schema.json" }
+      ]
     }
   }
 }

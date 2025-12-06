@@ -28,99 +28,68 @@
     }
   ],
 
-  "operations": [
+  "features": [
     {
-      "op": "mill:face",
-      "name": "FaceMill",
-      "selector": ">Z",
-      "params": {
-        "depth": 2
-      },
-      "feature": {
-        "feature_type": "planar_face",
-        "id": "F1_PLANAR_TOP",
-        "metadata": {
-          "source": {
-            "primary_standard": "ISO 10303-238",
-            "reference_standards": [
-              "ISO 10303-224",
-              "ISO 14649-11"
-            ]
-          }
-        },
-        "params": {
-          "csys_id": "WCS",
-          "normal_axis": "+Z",
-          "depth": 2.0,
-          "size_x": 50.0,
-          "size_y": 30.0
+      "feature_type": "planar_face",
+      "id": "F1_PLANAR_TOP",
+      "metadata": {
+        "source": {
+          "primary_standard": "ISO 10303-238",
+          "reference_standards": [
+            "ISO 10303-224",
+            "ISO 14649-11"
+          ]
         }
+      },
+      "params": {
+        "csys_id": "WCS",
+        "normal_axis": "+Z",
+        "depth": 2.0,
+        "size_x": 50.0,
+        "size_y": 30.0
       }
     },
-
     {
-      "op": "mill:profile",
-      "name": "EndMillOuter",
-      "selector": ">Z",
-      "params": {
-        "rect_w": 45,
-        "rect_h": 25,
-        "depth": 5
-      },
-      "feature": {
-        "feature_type": "pocket_rectangular",
-        "id": "F2_RECT_POCKET",
-        "metadata": {
-          "source": {
-            "primary_standard": "ISO 10303-238",
-            "reference_standards": [
-              "ISO 10303-224"
-            ]
-          }
-        },
-        "params": {
-          "csys_id": "WCS",
-          "origin_x": 0.0,
-          "origin_y": 0.0,
-          "width": 45.0,
-          "length": 25.0,
-          "corner_radius": 0.0,
-          "depth": 5.0,
-          "open_side": null
+      "feature_type": "pocket_rectangular",
+      "id": "F2_RECT_POCKET",
+      "metadata": {
+        "source": {
+          "primary_standard": "ISO 10303-238",
+          "reference_standards": [
+            "ISO 10303-224"
+          ]
         }
+      },
+      "params": {
+        "csys_id": "WCS",
+        "origin_x": 0.0,
+        "origin_y": 0.0,
+        "width": 45.0,
+        "length": 25.0,
+        "corner_radius": 0.0,
+        "depth": 5.0,
+        "open_side": null
       }
     },
-
     {
-      "op": "drill:hole",
-      "name": "HoleCenter",
-      "selector": ">Z",
-      "params": {
-        "dia": 5,
-        "depth": 10,
-        "x": 0,
-        "y": 0
-      },
-      "feature": {
-        "feature_type": "simple_hole",
-        "id": "F3_CENTER_HOLE",
-        "metadata": {
-          "source": {
-            "primary_standard": "ISO 10303-238",
-            "reference_standards": [
-              "ISO 14649-11"
-            ]
-          }
-        },
-        "params": {
-          "csys_id": "WCS",
-          "origin_x": 0.0,
-          "origin_y": 0.0,
-          "axis": "-Z",
-          "diameter": 5.0,
-          "depth": 10.0,
-          "through": false
+      "feature_type": "simple_hole",
+      "id": "F3_CENTER_HOLE",
+      "metadata": {
+        "source": {
+          "primary_standard": "ISO 10303-238",
+          "reference_standards": [
+            "ISO 14649-11"
+          ]
         }
+      },
+      "params": {
+        "csys_id": "WCS",
+        "origin_x": 0.0,
+        "origin_y": 0.0,
+        "axis": "-Z",
+        "diameter": 5.0,
+        "depth": 10.0,
+        "through": false
       }
     }
   ],
