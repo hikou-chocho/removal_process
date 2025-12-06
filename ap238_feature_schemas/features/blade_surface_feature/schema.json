@@ -78,11 +78,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "pressure_side_surface_ref",
-    "suction_side_surface_ref",
-    "hub_curve_ref",
-    "shroud_curve_ref"
+    "params"
   ],
   "additionalProperties": false
 }

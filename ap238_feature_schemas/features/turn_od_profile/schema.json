@@ -79,8 +79,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "profile"
+    "params"
   ],
   "additionalProperties": false
 }

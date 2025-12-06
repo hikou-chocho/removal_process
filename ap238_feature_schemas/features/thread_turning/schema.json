@@ -86,12 +86,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "start_z",
-    "end_z",
-    "diameter",
-    "pitch",
-    "side"
+    "params"
   ],
   "additionalProperties": false
 }

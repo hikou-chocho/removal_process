@@ -88,9 +88,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "normal_axis",
-    "depth"
+    "params"
   ],
   "additionalProperties": false
 }

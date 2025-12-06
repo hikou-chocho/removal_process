@@ -93,10 +93,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "plane_axis",
-    "profile",
-    "depth"
+    "params"
   ],
   "additionalProperties": false
 }

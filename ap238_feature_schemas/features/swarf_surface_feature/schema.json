@@ -88,12 +88,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "surface_ref",
-    "u_min",
-    "u_max",
-    "v_min",
-    "v_max"
+    "params"
   ],
   "additionalProperties": false
 }

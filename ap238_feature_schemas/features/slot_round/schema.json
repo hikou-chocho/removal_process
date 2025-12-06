@@ -86,14 +86,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "center_x",
-    "center_y",
-    "inner_radius",
-    "outer_radius",
-    "start_angle_deg",
-    "end_angle_deg",
-    "depth"
+    "params"
   ],
   "additionalProperties": false
 }

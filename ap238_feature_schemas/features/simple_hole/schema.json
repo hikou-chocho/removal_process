@@ -91,11 +91,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "origin_x",
-    "origin_y",
-    "axis",
-    "diameter"
+    "params"
   ],
   "additionalProperties": false
 }

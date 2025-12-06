@@ -89,13 +89,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "axis",
-    "z_position",
-    "width",
-    "depth",
-    "diameter",
-    "side"
+    "params"
   ],
   "additionalProperties": false
 }

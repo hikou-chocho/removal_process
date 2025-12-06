@@ -83,12 +83,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "origin_x",
-    "origin_y",
-    "width",
-    "length",
-    "height"
+    "params"
   ],
   "additionalProperties": false
 }

@@ -78,11 +78,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "origin_x",
-    "origin_y",
-    "radius",
-    "height"
+    "params"
   ],
   "additionalProperties": false
 }

@@ -76,10 +76,9 @@
     }
   },
   "required": [
-    "feature_type",
-    "id",
-    "csys_id",
-    "profile"
+     "feature_type",
+     "id",
+     "params"
   ],
   "additionalProperties": false
 }

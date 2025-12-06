@@ -98,13 +98,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "origin_x",
-    "origin_y",
-    "axis",
-    "major_diameter",
-    "thread_length",
-    "pitch"
+    "params"
   ],
   "additionalProperties": false
 }

@@ -87,10 +87,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "centerline",
-    "width",
-    "depth"
+    "params"
   ],
   "additionalProperties": false
 }

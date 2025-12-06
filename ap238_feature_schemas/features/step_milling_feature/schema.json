@@ -80,11 +80,7 @@
   "required": [
     "feature_type",
     "id",
-    "csys_id",
-    "step_direction",
-    "step_height",
-    "step_width",
-    "length"
+    "params"
   ],
   "additionalProperties": false
 }
