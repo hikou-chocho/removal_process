@@ -78,3 +78,57 @@ class NLFeatureResponse(BaseModel):
     """
     op: Operation
 
+
+# ============================================================
+# --- Feature-based Pipeline Models (AP238 L0 Features) ---
+# ============================================================
+
+
+class Csys(BaseModel):
+    """座標系定義 (csys_list 用)"""
+    name: str
+    role: Optional[str] = "local"
+    parent: Optional[str] = None
+    origin: Dict[str, float]  # {"x": 0.0, "y": 0.0, "z": 0.0}
+    rpy_deg: Dict[str, float]  # {"r": 0.0, "p": 0.0, "y": 0.0}
+    machine_abc_deg: Optional[Dict[str, float]] = None  # {"a": 0.0, "c": 0.0}
+
+
+class Feature(BaseModel):
+    """AP238 L0 Feature の基底型"""
+    feature_type: str
+    id: str
+    metadata: Optional[Dict[str, Any]] = None
+    params: Dict[str, Any]
+
+
+class FeaturePipelineRequest(BaseModel):
+    """
+    Feature-based pipeline request (AP238 L0 features)
+    """
+    units: Literal["mm", "inch"] = "mm"
+    origin: Literal["world", "center", "stock_min"] = "world"
+    stock: Stock
+    csys_list: List[Csys] = Field(default_factory=list)
+    features: List[Dict[str, Any]]  # Feature の配列（dict として受け取る）
+    output_mode: Literal["stl", "step", "show", "none"] = "step"
+    file_template_solid: str = "case_{step:02d}_{name}_solid.step"
+    file_template_removed: str = "case_{step:02d}_{name}_removed.step"
+    dry_run: bool = False
+
+
+class FeatureStepResult(BaseModel):
+    """Feature 適用ステップの結果"""
+    step: int
+    name: str
+    feature_type: str
+    solid: Optional[str] = None
+    removed: Optional[str] = None
+
+
+class FeaturePipelineResponse(BaseModel):
+    """Feature-based pipeline のレスポンス"""
+    status: Literal["ok", "error"]
+    message: Optional[str] = None
+    steps: List[FeatureStepResult] = Field(default_factory=list)
+

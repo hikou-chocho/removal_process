@@ -1,0 +1,52 @@
+{
+  "units": "mm",
+  "origin": "world",
+  "stock": {
+    "type": "cylinder",
+    "params": {
+      "dia": 50.0,
+      "h": 100.0
+    }
+  },
+  "csys_list": [
+    {
+      "name": "WCS",
+      "role": "world",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rpy_deg": {
+        "r": 0.0,
+        "p": 0.0,
+        "y": 0.0
+      }
+    }
+  ],
+  "features": [
+    {
+      "feature_type": "turn_od_profile",
+      "id": "F_OD_01",
+      "params": {
+        "csys_id": "WCS",
+        "profile": [
+          { "z": 0.0, "radius": 25.0 },
+          { "z": 20.0, "radius": 25.0 },
+          { "z": 20.0, "radius": 20.0 },
+          { "z": 40.0, "radius": 20.0 },
+          { "z": 40.0, "radius": 15.0 },
+          { "z": 80.0, "radius": 15.0 },
+          { "z": 80.0, "radius": 25.0 },
+          { "z": 100.0, "radius": 25.0 }
+        ],
+        "angle_deg": 360.0,
+        "mode": "cut"
+      }
+    }
+  ],
+  "output_mode": "stl",
+  "file_template_solid": "turn_od_{step:02d}_{name}_solid.stl",
+  "file_template_removed": "turn_od_{step:02d}_{name}_removed.stl",
+  "dry_run": false
+}
