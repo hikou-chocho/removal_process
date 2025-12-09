@@ -1,0 +1,87 @@
+{
+  "units": "mm",
+  "origin": "world",
+  "stock": {
+    "type": "block",
+    "params": {
+      "w": 100.0,
+      "h": 50.0,
+      "d": 80.0
+    }
+  },
+  "csys_list": [
+    {
+      "name": "WCS",
+      "role": "world",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rpy_deg": {
+        "r": 0.0,
+        "p": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "name": "TOP_OFFSET",
+      "role": "feature",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 25.0
+      },
+      "rpy_deg": {
+        "r": 0.0,
+        "p": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "name": "SIDE_CSYS",
+      "role": "feature",
+      "origin": {
+        "x": 0.0,
+        "y": 40.0,
+        "z": 25.0
+      },
+      "rpy_deg": {
+        "r": -90.0,
+        "p": 0.0,
+        "y": 0.0
+      }
+    }
+  ],
+  "features": [
+    {
+      "feature_type": "planar_face",
+      "id": "F1_TOP_FACE",
+      "name": "TopFaceMill",
+      "params": {
+        "csys_id": "TOP_OFFSET",
+        "normal_axis": "+Z",
+        "depth": 5.0,
+        "size_x": 60.0,
+        "size_y": 40.0,
+        "mode": "cut"
+      }
+    },
+    {
+      "feature_type": "planar_face",
+      "id": "F2_SIDE_FACE",
+      "name": "SideFaceMill",
+      "params": {
+        "csys_id": "SIDE_CSYS",
+        "normal_axis": "+Z",
+        "depth": 10.0,
+        "size_x": 100.0,
+        "size_y": 30.0,
+        "mode": "cut"
+      }
+    }
+  ],
+  "output_mode": "stl",
+  "file_template_solid": "case_{step:02d}_{name}_solid.stl",
+  "file_template_removed": "case_{step:02d}_{name}_removed.stl"
+}

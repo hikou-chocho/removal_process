@@ -1,7 +1,7 @@
 # api/geometry/volume_3d.py
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Optional, Literal
+from typing import Optional, Literal, Tuple
 import cadquery as cq
 
 
@@ -48,6 +48,67 @@ def revolve_profile_volume(
         # removed = 元の solid から new_solid を引いた部分（削られる部分）
         new_solid = solid.intersect(vol)
         removed = solid.cut(vol)
+        return GeometryDelta(solid=new_solid, removed=removed)
+
+    elif mode == "add":
+        new_solid = solid.union(vol)
+        added = vol
+        return GeometryDelta(solid=new_solid, added=added)
+
+    else:
+        raise ValueError(f"Unsupported mode: {mode}")
+
+
+def box_volume(
+    wp: cq.Workplane,
+    size_x: float,
+    size_y: float,
+    depth: float,
+    direction: Tuple[float, float, float],
+) -> cq.Workplane:
+    """
+    Workplane 上に「大きさ size_x × size_y、片側 depth」の
+    直方体ボリュームを生成して返す。
+
+    direction は「depth をどちら側に伸ばすか」を決めるために使い、
+    ここでは単純に Z 成分の符号で前後を決める。
+    """
+    if depth <= 0.0:
+        raise ValueError("depth must be > 0")
+
+    _, _, nz = direction
+    sign = 1.0 if nz >= 0.0 else -1.0
+
+    vol = (
+        wp.box(
+            size_x,
+            size_y,
+            depth,
+            centered=(True, True, False),  # XY 中心、Z 片側
+        )
+        .translate((0.0, 0.0, sign * depth / 2.0))
+    )
+    return vol
+
+
+def box_volume_apply(
+    solid: cq.Workplane,
+    wp: cq.Workplane,
+    size_x: float,
+    size_y: float,
+    depth: float,
+    direction: Tuple[float, float, float],
+    mode: Literal["cut", "add"] = "cut",
+) -> GeometryDelta:
+    """
+    box_volume を使って solid に cut / add を適用し、GeometryDelta を返す。
+    planar_face / 単純な矩形段差・ポケットなどから利用する想定。
+    """
+    vol = box_volume(wp, size_x=size_x, size_y=size_y, depth=depth, direction=direction)
+
+    if mode == "cut":
+        new_solid = solid.cut(vol)
+        removed = vol
         return GeometryDelta(solid=new_solid, removed=removed)
 
     elif mode == "add":
