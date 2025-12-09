@@ -13,6 +13,8 @@ def make_turn_od_profile_zd(
     Z = 軸方向, radius = 半径を X に割り当てる。
 
     points_zd: [{ "z": 0.0, "radius": 25.0 }, ...]
+    
+    このプロファイルは「残す形状の外形」を定義する。
     """
 
     if len(points_zd) < 2:
@@ -24,7 +26,6 @@ def make_turn_od_profile_zd(
         r = float(p["radius"])
         path_points.append((r, z))  # X = radius, Z = axis direction
 
-    # XZ 平面に 2D polyline プロファイルを作成
     # 回転軸（Z軸）との閉じた領域を作るため、軸上の点を追加
     z_start = path_points[0][1]
     z_end = path_points[-1][1]

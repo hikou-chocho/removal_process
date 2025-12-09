@@ -29,6 +29,10 @@ def revolve_profile_volume(
     cut / add を行う。new_solid と removed/added ボリュームを返す。
 
     - profile.revolve() の回転軸/平面は profile 側の Workplane に依存。
+    
+    旋盤加工の場合:
+    - プロファイルは「残す形状の外形」を定義
+    - mode="cut" の場合、プロファイル形状との交差が new_solid、差分が removed
     """
 
     if angle_deg == 0.0:
@@ -39,9 +43,11 @@ def revolve_profile_volume(
     vol = profile.revolve(angle_deg)
 
     if mode == "cut":
-        # 実際に除去される部分は solid と vol の交差部分
-        removed = solid.intersect(vol)
-        new_solid = solid.cut(vol)
+        # プロファイルは「残す形状」を定義
+        # new_solid = プロファイル形状との交差（残る部分）
+        # removed = 元の solid から new_solid を引いた部分（削られる部分）
+        new_solid = solid.intersect(vol)
+        removed = solid.cut(vol)
         return GeometryDelta(solid=new_solid, removed=removed)
 
     elif mode == "add":
