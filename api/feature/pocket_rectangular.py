@@ -19,7 +19,11 @@ def apply_pocket_rectangular_geometry(
     csys_index: Dict[str, CsysDef],
 ) -> GeometryDelta:
     """
-    pocket_rectangular を矩形プロファイル押し出しで cut/add。
+    pocket_rectangular フィーチャを矩形プロファイル + 押し出しボリューム cut/add として適用。
+
+    axis は CSYS ローカル基準で解釈する:
+      - axis = "-Z"（デフォルト）: 面の表側(+Z)から中(-Z)へ掘る
+      - axis = "+Z"               : 中から表側へ押し出す（特殊用途）
     """
     params = feature.get("params") or {}
 
@@ -44,16 +48,19 @@ def apply_pocket_rectangular_geometry(
     origin_x = float(params.get("origin_x", 0.0))
     origin_y = float(params.get("origin_y", 0.0))
 
-    axis = params.get("axis", "-Z")
-    a = str(axis).strip().upper()
-    if a not in ("+Z", "-Z"):
-        raise FeatureError("pocket_rectangular.axis must be '+Z' or '-Z'")
-    direction = (0.0, 0.0, 1.0) if a == "+Z" else (0.0, 0.0, -1.0)
+    axis = params.get("axis", "-Z")  # CSYS ローカル
+    if axis not in ("+Z", "-Z"):
+        raise FeatureError("pocket_rectangular.axis must be '+Z' or '-Z' in CSYS local coords")
+
+    # depth の符号を axis で決定
+    signed_depth = depth if axis == "+Z" else -depth
 
     mode = params.get("mode", "cut")
 
+    # csys の XY 平面上で、origin_x / origin_y をポケット中心に取る
     wp = workplane_from_csys(csys, base_plane="XY").center(origin_x, origin_y)
 
+    # 2D 矩形プロファイル（角R付き）を生成
     prof = make_rect_profile_centered(
         wp=wp,
         width=width,
@@ -61,11 +68,11 @@ def apply_pocket_rectangular_geometry(
         corner_radius=corner_radius,
     )
 
+    # ローカル Z 方向に押し出して cut/add
     delta = extrude_profile_volume(
         solid=solid,
         profile=prof,
-        depth=depth,
-        direction=direction,
+        depth=signed_depth,
         mode=mode,
     )
     return delta

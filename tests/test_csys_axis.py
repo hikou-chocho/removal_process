@@ -5,7 +5,6 @@ import cadquery as cq
 
 from api.csys import CsysDef, workplane_from_csys
 from api.geometry.volume_3d import (
-    box_volume,
     extrude_profile_volume,
     cylinder_volume_apply,
     GeometryDelta,
@@ -93,67 +92,6 @@ def test_workplane_from_csys_wcs_xz():
 
 
 # -----------------------------
-# box_volume (planar_face 相当) の方向テスト
-# -----------------------------
-
-
-def test_box_volume_direction_minus_z():
-    """
-    axis = '-Z', depth>0 のとき、
-    box_volume は Z=0 から Z=-depth に向かって伸びることを確認。
-    """
-    csys = CsysDef(
-        name="WCS",
-        role="world",
-        origin=(0.0, 0.0, 0.0),
-        rpy_deg=(0.0, 0.0, 0.0),
-    )
-    wp = workplane_from_csys(csys, base_plane="XY")
-
-    direction = planar_axis_to_vector("-Z")
-
-    vol = box_volume(
-        wp=wp,
-        size_x=20.0,
-        size_y=10.0,
-        depth=5.0,
-        direction=direction,
-    )
-    xmin, xmax, ymin, ymax, zmin, zmax = bbox6(vol)
-
-    assert math.isclose(zmax, 0.0, abs_tol=EPS), "top face should be at Z=0 for -Z"
-    assert math.isclose(zmin, -5.0, abs_tol=EPS), "bottom face should be at Z=-depth"
-
-
-def test_box_volume_direction_plus_z():
-    """
-    axis = '+Z', depth>0 のとき、
-    box_volume は Z=0 から Z=+depth に向かって伸びることを確認。
-    """
-    csys = CsysDef(
-        name="WCS",
-        role="world",
-        origin=(0.0, 0.0, 0.0),
-        rpy_deg=(0.0, 0.0, 0.0),
-    )
-    wp = workplane_from_csys(csys, base_plane="XY")
-
-    direction = planar_axis_to_vector("+Z")
-
-    vol = box_volume(
-        wp=wp,
-        size_x=20.0,
-        size_y=10.0,
-        depth=5.0,
-        direction=direction,
-    )
-    xmin, xmax, ymin, ymax, zmin, zmax = bbox6(vol)
-
-    assert math.isclose(zmin, 0.0, abs_tol=EPS), "bottom face should be at Z=0 for +Z"
-    assert math.isclose(zmax, 5.0, abs_tol=EPS), "top face should be at Z=+depth"
-
-
-# -----------------------------
 # extrude_profile_volume (pocket_rectangular 相当) の方向テスト
 # -----------------------------
 
@@ -174,15 +112,12 @@ def test_extrude_profile_volume_minus_z():
     # Z=0 上に 10x10 のプロファイルを作る
     profile = wp.rect(10.0, 10.0)
 
-    direction = pocket_axis_to_vector("-Z")
-
     # solid は仮の大きめブロック
     solid = cq.Workplane("XY").box(100.0, 100.0, 100.0, centered=True)
     delta: GeometryDelta = extrude_profile_volume(
         solid=solid,
         profile=profile,
-        depth=5.0,
-        direction=direction,
+        depth=-5.0,
         mode="cut",
     )
 
@@ -207,14 +142,11 @@ def test_extrude_profile_volume_plus_z():
     wp = workplane_from_csys(csys, base_plane="XY")
 
     profile = wp.rect(10.0, 10.0)
-    direction = pocket_axis_to_vector("+Z")
-
     solid = cq.Workplane("XY").box(100.0, 100.0, 100.0, centered=True)
     delta: GeometryDelta = extrude_profile_volume(
         solid=solid,
         profile=profile,
         depth=5.0,
-        direction=direction,
         mode="cut",
     )
 
@@ -242,15 +174,12 @@ def test_cylinder_volume_minus_z():
         rpy_deg=(0.0, 0.0, 0.0),
     )
     wp = workplane_from_csys(csys, base_plane="XY")
-    direction = hole_axis_to_vector("-Z")
-
     solid = cq.Workplane("XY").box(100.0, 100.0, 100.0, centered=True)
     delta: GeometryDelta = cylinder_volume_apply(
         solid=solid,
         wp=wp,
         diameter=10.0,
-        depth=5.0,
-        direction=direction,
+        depth=-5.0,
         mode="cut",
     )
 
@@ -273,15 +202,12 @@ def test_cylinder_volume_plus_z():
         rpy_deg=(0.0, 0.0, 0.0),
     )
     wp = workplane_from_csys(csys, base_plane="XY")
-    direction = hole_axis_to_vector("+Z")
-
     solid = cq.Workplane("XY").box(100.0, 100.0, 100.0, centered=True)
     delta: GeometryDelta = cylinder_volume_apply(
         solid=solid,
         wp=wp,
         diameter=10.0,
         depth=5.0,
-        direction=direction,
         mode="cut",
     )
 

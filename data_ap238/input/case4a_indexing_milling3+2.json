@@ -15,19 +15,19 @@
     {
       "name": "A0C0_TOP",
       "role": "setup",
-      "origin": { "x": 0.0, "y": 0.0, "z": 0.0 },
+      "origin": { "x": 0.0, "y": 0.0, "z": 40.0 },
       "rpy_deg": { "r": 0.0, "p": 0.0, "y": 0.0 }
     },
     {
       "name": "A90C0_FRONT",
       "role": "setup",
-      "origin": { "x": 0.0, "y": 0.0, "z": 0.0 },
+      "origin": { "x": 0.0, "y": 30.0, "z": 20.0 },
       "rpy_deg": { "r": 90.0, "p": 0.0, "y": 0.0 }
     },
     {
       "name": "A90C90_RIGHT",
       "role": "setup",
-      "origin": { "x": 0.0, "y": 0.0, "z": 0.0 },
+      "origin": { "x": 60.0, "y": 0.0, "z": 20.0 },
       "rpy_deg": { "r": -90.0, "p": 0.0, "y": 90.0 }
     }
   ],
@@ -73,6 +73,7 @@
         "length": 30.0,
         "corner_radius": 5.0,
         "depth": 10.0,
+        "axis": "-Z",
         "open_side": null
       }
     },
@@ -96,6 +97,7 @@
         "length": 20.0,
         "corner_radius": 4.0,
         "depth": 8.0,
+        "axis": "-Z",
         "open_side": null
       }
     },

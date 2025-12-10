@@ -22,7 +22,7 @@ def apply_simple_hole_geometry(
     """
     params = feature.get("params") or {}
 
-    csys_id = params.get("csys_id")
+    csys_id = params.get("csys_id")  # CSYS ローカル
     if not csys_id:
         raise FeatureError("simple_hole.params.csys_id is required")
 
@@ -41,11 +41,12 @@ def apply_simple_hole_geometry(
     origin_x = float(params.get("origin_x", 0.0))
     origin_y = float(params.get("origin_y", 0.0))
 
-    axis = params.get("axis", "-Z")
-    a = str(axis).strip().upper()
-    if a not in ("+Z", "-Z"):
-        raise FeatureError("simple_hole.axis must be '+Z' or '-Z'")
-    direction = (0.0, 0.0, 1.0) if a == "+Z" else (0.0, 0.0, -1.0)
+    axis = params.get("axis", "-Z")  # CSYS ローカル
+    if axis not in ("+Z", "-Z"):
+        raise FeatureError("simple_hole.axis must be '+Z' or '-Z' in CSYS local coords")
+
+    # depth の符号を axis で決定
+    signed_depth = depth if axis == "+Z" else -depth
 
     mode = params.get("mode", "cut")
 
@@ -55,8 +56,7 @@ def apply_simple_hole_geometry(
         solid=solid,
         wp=wp,
         diameter=diameter,
-        depth=depth,
-        direction=direction,
+        depth=signed_depth,
         mode=mode,
     )
     return delta

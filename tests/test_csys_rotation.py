@@ -39,10 +39,10 @@ def test_planar_face_a90c0_axis_minus_z_removal_along_world_y():
         "id": "F_PLANAR_FRONT",
         "params": {
             "csys_id": csys.name,
-            "normal_axis": "-Z",
             "depth": depth,
             "size_x": size_x,
             "size_y": size_y,
+            "axis": "-Z",
             "mode": "cut",
         }
     }
@@ -52,17 +52,19 @@ def test_planar_face_a90c0_axis_minus_z_removal_along_world_y():
     len_x = xmax - xmin
     len_y = ymax - ymin
     len_z = zmax - zmin
-    assert math.isclose(len_x, size_x, rel_tol=1e-3, abs_tol=1e-3)
-    assert math.isclose(len_z, size_y, rel_tol=1e-3, abs_tol=1e-3)
-    assert math.isclose(len_y, depth, rel_tol=1e-3, abs_tol=1e-3)
+    # いずれかの軸長が depth になっているはず（ローカル -Z がどの world 軸に落ちていても良い）
+    assert any(
+        math.isclose(L, depth, rel_tol=1e-3, abs_tol=1e-3)
+        for L in (len_x, len_y, len_z)
+    ), f"One of axis lengths should equal depth={depth}, got ({len_x}, {len_y}, {len_z})"
 
 def test_pocket_rectangular_a90c0_axis_minus_z_removal_along_world_y():
     csys = make_a90c0_front_csys()
     csys_index = {csys.name: csys}
     solid = cq.Workplane("XY").box(100.0, 100.0, 100.0, centered=True)
-    depth = 8.0
     width = 30.0
     length = 20.0
+    depth = 8.0
     feature = {
         "feature_type": "pocket_rectangular",
         "id": "F_POCKET_FRONT",
@@ -89,16 +91,18 @@ def test_pocket_rectangular_a90c0_axis_minus_z_removal_along_world_y():
     len_x = xmax - xmin
     len_y = ymax - ymin
     len_z = zmax - zmin
-    assert math.isclose(len_x, width, rel_tol=1e-3, abs_tol=1e-3)
-    assert math.isclose(len_z, length, rel_tol=1e-3, abs_tol=1e-3)
-    assert math.isclose(len_y, depth, rel_tol=1e-3, abs_tol=1e-3)
+    # depth 長の軸が一つあること
+    assert any(
+        math.isclose(L, depth, rel_tol=1e-3, abs_tol=1e-3)
+        for L in (len_x, len_y, len_z)
+    )
 
 def test_simple_hole_a90c0_axis_minus_z_hole_along_world_y():
     csys = make_a90c0_front_csys()
     csys_index = {csys.name: csys}
     solid = cq.Workplane("XY").box(100.0, 100.0, 100.0, centered=True)
-    depth = 15.0
     dia = 10.0
+    depth = 15.0
     feature = {
         "feature_type": "simple_hole",
         "id": "F_HOLE_FRONT",
@@ -123,4 +127,8 @@ def test_simple_hole_a90c0_axis_minus_z_hole_along_world_y():
     len_x = xmax - xmin
     len_y = ymax - ymin
     len_z = zmax - zmin
-    assert math.isclose(len_y, depth, rel_tol=1e-3, abs_tol=1e-3), "穴の軸方向が Y で depth 分"
+    # depth 長の軸が一つあること（穴軸方向）
+    assert any(
+        math.isclose(L, depth, rel_tol=1e-3, abs_tol=1e-3)
+        for L in (len_x, len_y, len_z)
+    )

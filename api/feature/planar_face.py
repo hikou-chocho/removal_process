@@ -17,10 +17,18 @@ def apply_planar_face_geometry(
     solid: cq.Workplane,
     feature: Dict[str, Any],
     csys_index: Dict[str, CsysDef],
-) -> GeometryDelta:
+    ) -> GeometryDelta:
     """
-    planar_face フィーチャを「矩形プロファイル押し出し」で cut/add。
-    profile_2d.make_rect_profile_centered + volume_3d.extrude_profile_volume ベース。
+    planar_face フィーチャを「矩形領域の平面加工」として適用。
+    実装は rect プロファイル＋押し出しボリュームの cut/add。
+
+    axis は CSYS ローカル基準で解釈する:
+      - axis = "-Z"（デフォルト）: 面の表側(+Z)から中(-Z)へ削る
+      - axis = "+Z"               : 中から表側へ削る（特殊用途）
+
+    既存データで normal_axis がある場合:
+      - geometry 的には使わず、あくまでメタ情報として扱う
+      - axis 未指定なら "-Z" とみなす（後方互換）
     """
     params = feature.get("params") or {}
 
@@ -41,18 +49,20 @@ def apply_planar_face_geometry(
     if size_x <= 0.0 or size_y <= 0.0:
         raise FeatureError("planar_face.size_x/size_y must be > 0")
 
-    normal_axis = params.get("normal_axis", "+Z")
-    a = str(normal_axis).strip().upper()
-    if a not in ("+Z", "-Z"):
-        raise FeatureError("planar_face.normal_axis must be '+Z' or '-Z'")
-    direction = (0.0, 0.0, 1.0) if a == "+Z" else (0.0, 0.0, -1.0)
+    # axis: CSYS ローカル。省略時は "-Z"（表側から中へ）
+    axis = params.get("axis", "-Z")
+    if axis not in ("+Z", "-Z"):
+        raise FeatureError("planar_face.axis must be '+Z' or '-Z' in CSYS local coords")
+
+    # depth の符号を axis で決定
+    signed_depth = depth if axis == "+Z" else -depth
 
     mode = params.get("mode", "cut")
 
-    # csys の XY を面の平面として扱う
+    # csys の XY を面の平面として扱う（原点を矩形中心とみなす）
     wp = workplane_from_csys(csys, base_plane="XY")
 
-    # profile_2d.make_rect_profile_centered で矩形プロファイルを作成
+    # 2D プロファイル（矩形）を生成。planar_face は角Rなし。
     prof = make_rect_profile_centered(
         wp=wp,
         width=size_x,
@@ -60,12 +70,11 @@ def apply_planar_face_geometry(
         corner_radius=0.0,
     )
 
-    # volume_3d.extrude_profile_volume で押し出し
+    # ローカル Z 方向に押し出して cut/add
     delta = extrude_profile_volume(
         solid=solid,
         profile=prof,
-        depth=depth,
-        direction=direction,
+        depth=signed_depth,
         mode=mode,
     )
     return delta
