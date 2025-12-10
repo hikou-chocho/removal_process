@@ -5,32 +5,12 @@ from typing import Any, Dict, Tuple
 import cadquery as cq
 
 from ..csys import CsysDef, workplane_from_csys
-from ..geometry.volume_3d import box_volume_apply, GeometryDelta
+from ..geometry.profile_2d import make_rect_profile_centered
+from ..geometry.volume_3d import extrude_profile_volume, GeometryDelta
 
 
 class FeatureError(RuntimeError):
     """planar_face の解釈エラー"""
-
-
-def _axis_to_vector(axis: str) -> Tuple[float, float, float]:
-    """
-    "+Z", "-Z", "+X", ... を単位ベクトルにマッピング。
-    planar_face では主に depth 方向判定のために使う。
-    """
-    a = axis.strip().upper()
-    if a == "+Z":
-        return (0.0, 0.0, 1.0)
-    if a == "-Z":
-        return (0.0, 0.0, -1.0)
-    if a == "+X":
-        return (1.0, 0.0, 0.0)
-    if a == "-X":
-        return (-1.0, 0.0, 0.0)
-    if a == "+Y":
-        return (0.0, 1.0, 0.0)
-    if a == "-Y":
-        return (0.0, -1.0, 0.0)
-    raise FeatureError(f"Unsupported normal_axis: {axis}")
 
 
 def apply_planar_face_geometry(
@@ -39,25 +19,8 @@ def apply_planar_face_geometry(
     csys_index: Dict[str, CsysDef],
 ) -> GeometryDelta:
     """
-    planar_face フィーチャを「矩形領域の直方体ボリューム cut/add」として適用し、
-    GeometryDelta（solid + removed/added）を返す。
-
-    想定 feature 例:
-
-    {
-      "feature_type": "planar_face",
-      "id": "F1_PLANAR_TOP",
-      "params": {
-        "csys_id": "WCS",
-        "normal_axis": "+Z",
-        "depth": 2.0,
-        "size_x": 50.0,
-        "size_y": 30.0,
-        "mode": "cut"   // 任意。省略時 cut
-      }
-    }
-
-    ※ csys の XY 平面を面の基準とし、原点を矩形の中心とみなす。
+    planar_face フィーチャを「矩形プロファイル押し出し」で cut/add。
+    profile_2d.make_rect_profile_centered + volume_3d.extrude_profile_volume ベース。
     """
     params = feature.get("params") or {}
 
@@ -79,19 +42,28 @@ def apply_planar_face_geometry(
         raise FeatureError("planar_face.size_x/size_y must be > 0")
 
     normal_axis = params.get("normal_axis", "+Z")
-    direction = _axis_to_vector(normal_axis)
+    a = str(normal_axis).strip().upper()
+    if a not in ("+Z", "-Z"):
+        raise FeatureError("planar_face.normal_axis must be '+Z' or '-Z'")
+    direction = (0.0, 0.0, 1.0) if a == "+Z" else (0.0, 0.0, -1.0)
 
-    mode = params.get("mode", "cut")  # 将来 add も許容可能
+    mode = params.get("mode", "cut")
 
     # csys の XY を面の平面として扱う
     wp = workplane_from_csys(csys, base_plane="XY")
 
-    # ここで box_volume_apply を使って GeometryDelta を取得
-    delta = box_volume_apply(
-        solid=solid,
+    # profile_2d.make_rect_profile_centered で矩形プロファイルを作成
+    prof = make_rect_profile_centered(
         wp=wp,
-        size_x=size_x,
-        size_y=size_y,
+        width=size_x,
+        length=size_y,
+        corner_radius=0.0,
+    )
+
+    # volume_3d.extrude_profile_volume で押し出し
+    delta = extrude_profile_volume(
+        solid=solid,
+        profile=prof,
         depth=depth,
         direction=direction,
         mode=mode,

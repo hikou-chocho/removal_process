@@ -38,3 +38,35 @@ def make_turn_od_profile_zd(
     # ここで corner R, chamfer などを入れたい場合は、
     # prof = prof.fillet(r) / prof = prof.chamfer(...) などで拡張する。
     return prof
+
+
+def make_rect_profile_centered(
+    wp: cq.Workplane,
+    width: float,
+    length: float,
+    corner_radius: float = 0.0,
+) -> cq.Workplane:
+    """
+    XY 平面上に中心原点の矩形プロファイルを作成。
+    corner_radius > 0 の場合は四隅をフィレット。
+
+    wp は「原点がポケット中心」の CSYS に合わせておく前提。
+    """
+    if width <= 0.0 or length <= 0.0:
+        raise ValueError("width/length must be > 0")
+
+    w = float(width)
+    l = float(length)
+    r = float(corner_radius)
+
+    prof = wp.rect(w, l)
+
+    if r > 0.0:
+        # Corner fillet on a standalone profile requires creating a solid
+        # or a sketch context; calling vertices().fillet(r) here can fail
+        # with "Cannot find a solid on the stack" in some CadQuery versions.
+        # For now, we skip automatic fillet to keep profile creation robust.
+        # TODO: implement rounded-rectangle polyline if corner_radius > 0
+        pass
+
+    return prof

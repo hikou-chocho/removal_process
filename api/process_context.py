@@ -8,10 +8,8 @@ from .csys import CsysDef, build_csys_index
 from .geometry.volume_3d import GeometryDelta
 from .feature.turn_od_profile import apply_turn_od_profile_geometry, FeatureError
 from .feature.planar_face import apply_planar_face_geometry
-
-# 必要に応じて他の feature も import:
-# from .feature.pocket_rectangular import apply_pocket_rectangular_geometry
-# ...
+from .feature.pocket_rectangular import apply_pocket_rectangular_geometry
+from .feature.simple_hole import apply_simple_hole_geometry
 
 
 @dataclass
@@ -72,8 +70,12 @@ class ProcessContext:
         elif ft == "planar_face":
             delta = apply_planar_face_geometry(self.solid, feature, self.csys_index)
 
-        # elif ft == "pocket_rectangular":
-        #     delta = apply_pocket_rectangular_geometry(self.solid, feature, self.csys_index)
+        elif ft == "pocket_rectangular":
+            delta = apply_pocket_rectangular_geometry(self.solid, feature, self.csys_index)
+
+        elif ft == "simple_hole":
+            delta = apply_simple_hole_geometry(self.solid, feature, self.csys_index)
+
         else:
             raise FeatureError(f"Unsupported feature_type: {ft}")
 

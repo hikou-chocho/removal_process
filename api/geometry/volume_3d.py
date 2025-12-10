@@ -29,31 +29,21 @@ def revolve_profile_volume(
     cut / add を行う。new_solid と removed/added ボリュームを返す。
 
     - profile.revolve() の回転軸/平面は profile 側の Workplane に依存。
-    
-    旋盤加工の場合:
-    - プロファイルは「残す形状の外形」を定義
-    - mode="cut" の場合、プロファイル形状との交差が new_solid、差分が removed
     """
 
     if angle_deg == 0.0:
         # 変化なし
         return GeometryDelta(solid=solid)
 
-    # 回転体ボリューム
     vol = profile.revolve(angle_deg)
 
     if mode == "cut":
-        # プロファイルは「残す形状」を定義
-        # new_solid = プロファイル形状との交差（残る部分）
-        # removed = 元の solid から new_solid を引いた部分（削られる部分）
-        new_solid = solid.intersect(vol)
-        removed = solid.cut(vol)
-        return GeometryDelta(solid=new_solid, removed=removed)
+        new_solid = solid.cut(vol)
+        return GeometryDelta(solid=new_solid, removed=vol)
 
     elif mode == "add":
         new_solid = solid.union(vol)
-        added = vol
-        return GeometryDelta(solid=new_solid, added=added)
+        return GeometryDelta(solid=new_solid, added=vol)
 
     else:
         raise ValueError(f"Unsupported mode: {mode}")
@@ -70,24 +60,28 @@ def box_volume(
     Workplane 上に「大きさ size_x × size_y、片側 depth」の
     直方体ボリュームを生成して返す。
 
-    direction は「depth をどちら側に伸ばすか」を決めるために使い、
-    ここでは単純に Z 成分の符号で前後を決める。
+    direction の Z 成分の符号で、
+    - +Z: Z=0..depth
+    - -Z: Z=-depth..0
+    になるように配置する。
     """
     if depth <= 0.0:
         raise ValueError("depth must be > 0")
 
     _, _, nz = direction
-    sign = 1.0 if nz >= 0.0 else -1.0
 
-    vol = (
-        wp.box(
-            size_x,
-            size_y,
-            depth,
-            centered=(True, True, False),  # XY 中心、Z 片側
-        )
-        .translate((0.0, 0.0, sign * depth / 2.0))
+    # まず Z=0..depth の箱を作る（centered=(True,True,False)）
+    vol = wp.box(
+        size_x,
+        size_y,
+        depth,
+        centered=(True, True, False),
     )
+
+    # -Z の場合だけ、全体を -depth シフトして [-depth, 0] に移動する
+    if nz < 0.0:
+        vol = vol.translate((0.0, 0.0, -depth))
+
     return vol
 
 
@@ -115,6 +109,70 @@ def box_volume_apply(
         new_solid = solid.union(vol)
         added = vol
         return GeometryDelta(solid=new_solid, added=added)
+
+    else:
+        raise ValueError(f"Unsupported mode: {mode}")
+
+
+def extrude_profile_volume(
+    solid: cq.Workplane,
+    profile: cq.Workplane,
+    depth: float,
+    direction: Tuple[float, float, float],
+    mode: Literal["cut", "add"] = "cut",
+) -> GeometryDelta:
+    """
+    2D プロファイルを Workplane 法線方向に押し出し、solid に cut/add。
+    direction は押し出し符号決定のみに使用。
+    """
+    if depth <= 0.0:
+        raise ValueError("depth must be > 0")
+
+    _, _, nz = direction
+    sign = 1.0 if nz >= 0.0 else -1.0
+
+    vol = profile.extrude(sign * depth)
+
+    if mode == "cut":
+        new_solid = solid.cut(vol)
+        return GeometryDelta(solid=new_solid, removed=vol)
+
+    elif mode == "add":
+        new_solid = solid.union(vol)
+        return GeometryDelta(solid=new_solid, added=vol)
+
+    else:
+        raise ValueError(f"Unsupported mode: {mode}")
+
+
+def cylinder_volume_apply(
+    solid: cq.Workplane,
+    wp: cq.Workplane,
+    diameter: float,
+    depth: float,
+    direction: Tuple[float, float, float],
+    mode: Literal["cut", "add"] = "cut",
+) -> GeometryDelta:
+    """
+    Workplane 上の円を押し出して円柱ボリュームを生成し、solid に適用。
+    simple_hole / 円形ポケットなどで利用。
+    """
+    if diameter <= 0.0 or depth <= 0.0:
+        raise ValueError("diameter/depth must be > 0")
+
+    radius = float(diameter) * 0.5
+    _, _, nz = direction
+    sign = 1.0 if nz >= 0.0 else -1.0
+
+    vol = wp.circle(radius).extrude(sign * depth)
+
+    if mode == "cut":
+        new_solid = solid.cut(vol)
+        return GeometryDelta(solid=new_solid, removed=vol)
+
+    elif mode == "add":
+        new_solid = solid.union(vol)
+        return GeometryDelta(solid=new_solid, added=vol)
 
     else:
         raise ValueError(f"Unsupported mode: {mode}")
